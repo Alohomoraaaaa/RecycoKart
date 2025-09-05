@@ -6,6 +6,7 @@ rutuja/**/__pycache__/        # Ignore Python cache folders
 *.pyd
 
 # --- Node / React ---
+node_modules/
 rutuja/recycokart-frontend/node_modules/  # Ignore node_modules
 rutuja/recycokart-frontend/.pnp*
 rutuja/recycokart-frontend/build/         # Ignore production build
