@@ -1,12 +1,12 @@
 # --- Python ---
-rutuja/venv/                  # Don't push local virtualenv
-rutuja/**/__pycache__/         # Ignore all __pycache__ everywhere
+rutuja/venv/                  # Ignore local virtual environment
+rutuja/**/__pycache__/        # Ignore Python cache folders
 *.pyc
 *.pyo
 *.pyd
 
 # --- Node / React ---
-rutuja/recycokart-frontend/node_modules/  # Don't push node_modules
+rutuja/recycokart-frontend/node_modules/  # Ignore node_modules
 rutuja/recycokart-frontend/.pnp*
 rutuja/recycokart-frontend/build/         # Ignore production build (can be rebuilt)
 
@@ -18,7 +18,7 @@ rutuja/recycokart-frontend/build/         # Ignore production build (can be rebu
 .env
 .env.*.local
 
-# --- Coverage / testing ---
+# --- Coverage / Testing ---
 coverage/
 *.coverage
 
