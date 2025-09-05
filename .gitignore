@@ -1,6 +1,6 @@
 # --- Python ---
-rutuja/venv/                 # Don't push local virtualenv
-rutuja/**/__pycache__/        # Ignore all __pycache__ everywhere
+rutuja/venv/                  # Don't push local virtualenv
+rutuja/**/__pycache__/         # Ignore all __pycache__ everywhere
 *.pyc
 *.pyo
 *.pyd
@@ -22,7 +22,12 @@ rutuja/recycokart-frontend/build/         # Ignore production build (can be rebu
 coverage/
 *.coverage
 
+# --- Prevent nested repos ---
+rutuja/**/.git/
+
 # --- Keep datasets and models ---
-# (Explicitly allow CSV + PKL files so your teammates get them)
 !rutuja/**/*.csv
 !rutuja/**/*.pkl
+
+# --- Jupyter (optional) ---
+*.ipynb_checkpoints
