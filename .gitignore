@@ -1,0 +1,9 @@
+# Python venv
+rutuja/venv/
+rutuja/__pycache__/
+
+# Models
+rutuja/ml/rate/*.pkl
+
+# CSVs if you don’t want them
+rutuja/*.csv
