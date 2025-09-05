@@ -1,54 +1,14 @@
-# ----------------
-# Python ignores
-# ----------------
-# Virtual environment
+# Python venv
 rutuja/venv/
-.venv/
-venv/
+rutuja/__pycache__/
 
-# Python cache/compiled files
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+# Node modules (frontend)
+rutuja/recycokart-frontend/node_modules/
+
+# Logs / cache
 *.log
-
-# Model files
-rutuja/ml/rate/*.pkl
-
-# Data files (optional)
-rutuja/*.csv
-
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints
-
-# ----------------
-# Node/React ignores
-# ----------------
-# Node modules
-rutuja-frontend/node_modules/
-node_modules/
-
-# Build outputs
-build/
-dist/
-*.cache
-*.parcel-cache
-*.next
-out/
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# ----------------
-# OS / Editor junk
-# ----------------
+*.pyc
+__pycache__/
 .DS_Store
-Thumbs.db
-*.swp
-*.swo
-.vscode/
-.idea/
+
+# Do NOT ignore .csv and .pkl (needed by team)
