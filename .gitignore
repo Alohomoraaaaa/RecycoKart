@@ -1,14 +1,28 @@
-# Python venv
-rutuja/venv/
-rutuja/__pycache__/
-
-# Node modules (frontend)
-rutuja/recycokart-frontend/node_modules/
-
-# Logs / cache
-*.log
+# --- Python ---
+rutuja/venv/                 # Don't push local virtualenv
+rutuja/**/__pycache__/        # Ignore all __pycache__ everywhere
 *.pyc
-__pycache__/
+*.pyo
+*.pyd
+
+# --- Node / React ---
+rutuja/recycokart-frontend/node_modules/  # Don't push node_modules
+rutuja/recycokart-frontend/.pnp*
+rutuja/recycokart-frontend/build/         # Ignore production build (can be rebuilt)
+
+# --- Logs / Cache ---
+*.log
 .DS_Store
 
-# Do NOT ignore .csv and .pkl (needed by team)
+# --- Environment files ---
+.env
+.env.*.local
+
+# --- Coverage / testing ---
+coverage/
+*.coverage
+
+# --- Keep datasets and models ---
+# (Explicitly allow CSV + PKL files so your teammates get them)
+!rutuja/**/*.csv
+!rutuja/**/*.pkl
