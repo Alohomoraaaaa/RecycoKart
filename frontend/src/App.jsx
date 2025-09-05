@@ -10,6 +10,7 @@ import PickupResult from "./pages/PickupResult";
 import CollectorSetup from "./pages/CollectorSetup";
 import CollectorRequests from "./pages/CollectorRequests";
 import PickupSummary from "./pages/PickupSummary";
+import LeaderBoard from "./pages/LeaderBoard";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/collector-setup" element={<CollectorSetup />} />
         <Route path="/collector-requests" element={<CollectorRequests />} />
         <Route path="/pickup-summary" element={<PickupSummary />} />
+        <Route path="/leaderboard" element={<LeaderBoard />} />
       </Routes>
     </Router>
   );

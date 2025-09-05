@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
 import { doc, getDoc, collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
 import { signOut } from "firebase/auth";
+import EcoBadges from "../pages/EcoBadges";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -112,6 +113,13 @@ function Dashboard() {
                 <h5 className="text-muted">Recyclables Sold</h5>
                 <h2 className="text-warning">{stats.recyclables} kg</h2>
               </div>
+            </div>
+          </div>
+
+            {/* 🔹 EcoBadges Section */}
+          <div className="mt-4">
+            <div className="card shadow-sm p-3">
+              <EcoBadges userId={auth.currentUser.uid} />
             </div>
           </div>
 

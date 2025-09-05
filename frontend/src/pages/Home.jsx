@@ -1,6 +1,10 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { auth } from "../firebase"; // make sure this path matches your firebase.js
 
 function Home() {
+  const isLoggedIn = !!auth.currentUser; // check if user is logged in
+
   return (
     <div>
       {/* Hero Section */}
@@ -13,9 +17,12 @@ function Home() {
             Sell Your Recyclables with Ease — connect with verified collectors, 
             get live prices, and book pickups all in one platform.
           </p>
-          <a href="/register" className="btn btn-success btn-lg mt-3">
+          <Link
+            to={isLoggedIn ? "/pickup" : "/register"}
+            className="btn btn-success btn-lg mt-3"
+          >
             Get Started
-          </a>
+          </Link>
         </div>
       </section>
 
