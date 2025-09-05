@@ -1,9 +1,54 @@
-# Python venv
+# ----------------
+# Python ignores
+# ----------------
+# Virtual environment
 rutuja/venv/
-rutuja/__pycache__/
+.venv/
+venv/
 
-# Models
+# Python cache/compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# Model files
 rutuja/ml/rate/*.pkl
 
-# CSVs if you don’t want them
+# Data files (optional)
 rutuja/*.csv
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# ----------------
+# Node/React ignores
+# ----------------
+# Node modules
+rutuja-frontend/node_modules/
+node_modules/
+
+# Build outputs
+build/
+dist/
+*.cache
+*.parcel-cache
+*.next
+out/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ----------------
+# OS / Editor junk
+# ----------------
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
