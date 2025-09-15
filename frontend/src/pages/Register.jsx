@@ -12,7 +12,6 @@ function Register() {
     email: "",
     password: "",
     contact: "",
-    address: "",
     role: "",
   });
 
@@ -42,12 +41,11 @@ function Register() {
       );
       const user = userCredential.user;
 
-      // Save basic user details in Firestore
+      // Save basic user details in Firestore (🚫 no address here)
       await setDoc(doc(db, "users", user.uid), {
         name: formData.name,
         email: formData.email,
         contact: formData.contact,
-        address: formData.address,
         role: formData.role,
       });
 
@@ -68,7 +66,6 @@ function Register() {
         email: "",
         password: "",
         contact: "",
-        address: "",
         role: "",
       });
     } catch (error) {
@@ -139,19 +136,7 @@ function Register() {
                 />
               </div>
 
-              {/* Locality */}
-              <div className="mb-3">
-                <label className="form-label">Locality</label>
-                <input
-                  type="text"
-                  name="address"
-                  className="form-control"
-                  placeholder="Enter Your Location"
-                  value={formData.address}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+              {/* 🚫 Removed Locality */}
 
               {/* Role Selection */}
               <div className="mb-3">

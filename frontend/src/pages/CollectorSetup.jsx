@@ -8,6 +8,7 @@ function CollectorSetup() {
   const navigate = useNavigate();
   const [scrapTypes, setScrapTypes] = useState([]);
   const [availability, setAvailability] = useState({ start: "", end: "" });
+  const [locality, setLocality] = useState(""); // ✅ Added locality state
   const [message, setMessage] = useState("");
 
   const options = ["Plastic", "Metal", "Paper", "E-Waste", "Glass", "Other"];
@@ -31,22 +32,23 @@ function CollectorSetup() {
       setMessage("Please select availability timings.");
       return;
     }
+    if (!locality) {
+      setMessage("Please select your locality.");
+      return;
+    }
 
     try {
       const userId = auth.currentUser.uid;
 
-      // Step 1: Fetch address from users collection
-      const userDoc = await getDoc(doc(db, "users", userId));
-      if (!userDoc.exists()) {
-        setMessage("❌ User address not found.");
-        return;
-      }
-      const { address } = userDoc.data();
+      // ✅ Step 1: Save locality to users collection (as address)
+      await updateDoc(doc(db, "users", userId), {
+        address: locality,
+      });
 
       // Step 2: Use OpenStreetMap API to get lat/lng
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          address
+          locality
         )}`
       );
       const data = await response.json();
@@ -78,6 +80,7 @@ function CollectorSetup() {
         <div className="col-md-6">
           <div className="card shadow-sm p-4">
             <form onSubmit={handleSubmit}>
+
               {/* Scrap Types */}
               <div className="mb-3">
                 <label className="form-label">Select Scrap Types You Collect</label>
@@ -122,6 +125,18 @@ function CollectorSetup() {
                 </div>
               </div>
 
+ {/* ✅ Locality Text Field */}
+              <div className="mb-3">
+                <label className="form-label">Locality</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={locality}
+                  onChange={(e) => setLocality(e.target.value)}
+                  placeholder="Enter your locality"
+                  required
+                />
+              </div>
               <button type="submit" className="btn btn-success w-100">
                 Save Setup
               </button>

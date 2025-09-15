@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 function Pickup() {
   const [scrapType, setScrapType] = useState("");
@@ -9,9 +9,8 @@ function Pickup() {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [error, setError] = useState("");
-  const [address, setAddress] = useState(""); // store user's address/locality
+  const [address, setAddress] = useState(""); // store user's locality (address in DB)
   const [pickupAddress, setPickupAddress] = useState("");
-
 
   const navigate = useNavigate();
 
@@ -22,7 +21,6 @@ function Pickup() {
       if (!user) return;
       const userDoc = await getDoc(doc(db, "users", user.uid));
       if (userDoc.exists()) {
-        // assuming field name in Firestore is "address"
         setAddress(userDoc.data().address || "");
       }
     };
@@ -42,22 +40,29 @@ function Pickup() {
     if (selectedDate < today) { setError("Pickup date cannot be in the past"); return; }
 
     if (!time) { setError("Please select a pickup time"); return; }
-
     if (!pickupAddress.trim()) { 
-  setError("Please enter your full pickup address"); 
-  return; 
-  }
+      setError("Please enter your full pickup address"); 
+      return; 
+    }
 
     setError("");
 
     try {
+      const user = auth.currentUser;
+      if (user) {
+        // ✅ Save locality into Firestore under "address"
+        await updateDoc(doc(db, "users", user.uid), {
+          address: address,
+        });
+      }
+
       // Get user location
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const userLat = position.coords.latitude;
           const userLng = position.coords.longitude;
 
-          // Navigate to PickupResult with all required info
+          // Navigate to PickupResult
           navigate("/pickupresult", {
             state: {
               scrapType,
@@ -66,8 +71,8 @@ function Pickup() {
               time,
               userLat,
               userLng,
-              address, // fetched from Firestore
-              pickupAddress,  
+              address, // from state
+              pickupAddress,
             },
           });
         },
@@ -150,6 +155,19 @@ function Pickup() {
                   value={pickupAddress}
                   onChange={(e) => setPickupAddress(e.target.value)}
                 ></textarea>
+              </div>
+
+              {/* Locality (UI word) */}
+              <div className="mb-3">
+                <label className="form-label">Locality</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Enter your locality"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  required
+                />
               </div>
 
               <button type="submit" className="btn btn-success w-100">

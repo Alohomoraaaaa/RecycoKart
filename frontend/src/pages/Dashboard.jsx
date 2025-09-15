@@ -180,9 +180,6 @@ function Dashboard() {
                   <strong>Contact:</strong> {profile.contact}
                 </p>
                 <p>
-                  <strong>Locality:</strong> {profile.address}
-                </p>
-                <p>
                   <strong>Role:</strong> {profile.role}
                 </p>
 
@@ -251,17 +248,6 @@ function Dashboard() {
                     value={editForm.contact}
                     onChange={(e) =>
                       setEditForm({ ...editForm, contact: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="col-md-6">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Address"
-                    value={editForm.address}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, address: e.target.value })
                     }
                   />
                 </div>
