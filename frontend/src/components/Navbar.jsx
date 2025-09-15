@@ -3,14 +3,29 @@ import { Link, useNavigate } from "react-router-dom";
 import { auth } from "../firebase"; // your firebase setup
 import { signOut } from "firebase/auth";
 
+// 🔹 CHANGE: import Firestore to fetch user role
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase"; // 🔹 CHANGE: Firestore instance
+
 function Navbar() {
   const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null); // 🔹 CHANGE: track role ("user" / "collector")
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Listen to Firebase auth state
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-      setUser(currentUser);
+   const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+
+        // 🔹 CHANGE: fetch role from Firestore
+        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+        if (userDoc.exists()) {
+          setRole(userDoc.data().role); // "user" or "collector"
+        }
+      } else {
+        setUser(null);
+        setRole(null); // 🔹 CHANGE: reset role on logout
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -47,9 +62,9 @@ function Navbar() {
               </Link>
             </li>
 
+            {/* 🔹 CHANGE: Guest menu */}
             {!user ? (
               <>
-                {/* Show only if not logged in */}
                 <li className="nav-item">
                   <Link className="nav-link" to="/login">
                     Login
@@ -61,9 +76,9 @@ function Navbar() {
                   </Link>
                 </li>
               </>
-            ) : (
+            ) : role === "user" ? (
               <>
-                {/* Show only if logged in */}
+                {/* 🔹 CHANGE: User menu */}
                 <li className="nav-item">
                   <Link className="nav-link" to="/dashboard">
                     Dashboard
@@ -79,16 +94,36 @@ function Navbar() {
                     to="#"
                     className="nav-link"
                     onClick={(e) => {
-                      e.preventDefault(); // prevent navigation
+                      e.preventDefault();
                       handleLogout();
                     }}
                   >
                     Logout
                   </Link>
                 </li>
-
               </>
-            )}
+            ) : role === "collector" ? (
+              <>
+                {/* 🔹 CHANGE: Collector menu */}
+                <li className="nav-item">
+                  <Link className="nav-link" to="/dashboard">
+                    Dashboard
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link
+                    to="#"
+                    className="nav-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLogout();
+                    }}
+                  >
+                    Logout
+                  </Link>
+                </li>
+              </>
+            ) : null}
           </ul>
         </div>
       </div>

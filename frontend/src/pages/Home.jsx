@@ -1,9 +1,47 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { auth } from "../firebase"; // make sure this path matches your firebase.js
+import { auth, db } from "../firebase"; // ✅ make sure db is exported from firebase.js
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 function Home() {
-  const isLoggedIn = !!auth.currentUser; // check if user is logged in
+  // 🔹 NEW: states for auth + role
+  const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // 🔹 Listen for auth state
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+
+        try {
+          // 🔹 Fetch role from Firestore users collection
+          const snap = await getDoc(doc(db, "users", currentUser.uid));
+          if (snap.exists()) {
+            setRole(snap.data().role); // role must be "user" or "collector"
+          } else {
+            setRole(null);
+          }
+        } catch (err) {
+          console.error("Error fetching role:", err);
+          setRole(null);
+        }
+      } else {
+        setUser(null);
+        setRole(null);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return <div className="p-5 text-center">Loading...</div>;
+  }
+
 
   return (
     <div>
@@ -18,8 +56,18 @@ function Home() {
             get live prices, and book pickups all in one platform.
           </p>
           <Link
-            to={isLoggedIn ? "/pickup" : "/register"}
-            className="btn btn-success btn-lg mt-3"
+          className="btn btn-success btn-lg mt-3"
+            // 🔹 CHANGE: role-based navigation
+            to={
+              !user
+                ? "/register"
+                : role === "user"
+                ? "/pickup"
+                : role === "collector"
+                ? "/dashboard"
+                : "/"
+            }
+            
           >
             Get Started
           </Link>
