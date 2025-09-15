@@ -2,13 +2,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 
 function CollectorSetup() {
   const navigate = useNavigate();
   const [scrapTypes, setScrapTypes] = useState([]);
   const [availability, setAvailability] = useState({ start: "", end: "" });
-  const [locality, setLocality] = useState(""); // ✅ Added locality state
+  const [locality, setLocality] = useState(""); // ✅ Locality still kept
   const [message, setMessage] = useState("");
 
   const options = ["Plastic", "Metal", "Paper", "E-Waste", "Glass", "Other"];
@@ -45,29 +45,28 @@ function CollectorSetup() {
         address: locality,
       });
 
-      // Step 2: Use OpenStreetMap API to get lat/lng
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          locality
-        )}`
+      // ✅ Step 2: Get live GPS location instead of text → coords API
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+
+          // ✅ Step 3: Save to collectors collection
+          await updateDoc(doc(db, "collectors", userId), {
+            scrapTypes,
+            availability,
+            lat,
+            lng: lon,
+          });
+
+          setMessage("✅ Collector setup saved with live GPS location!");
+          navigate("/");
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setMessage("❌ Please allow location access to complete setup.");
+        }
       );
-      const data = await response.json();
-      if (!data.length) {
-        setMessage("❌ Could not fetch location coordinates.");
-        return;
-      }
-      const { lat, lon } = data[0];
-
-      // Step 3: Save to collectors collection
-      await updateDoc(doc(db, "collectors", userId), {
-        scrapTypes,
-        availability,
-        lat: parseFloat(lat),
-        lng: parseFloat(lon),
-      });
-
-      setMessage("✅ Collector setup saved with location!");
-      navigate("/");
     } catch (error) {
       setMessage("❌ " + error.message);
     }
@@ -80,7 +79,6 @@ function CollectorSetup() {
         <div className="col-md-6">
           <div className="card shadow-sm p-4">
             <form onSubmit={handleSubmit}>
-
               {/* Scrap Types */}
               <div className="mb-3">
                 <label className="form-label">Select Scrap Types You Collect</label>
@@ -125,7 +123,7 @@ function CollectorSetup() {
                 </div>
               </div>
 
- {/* ✅ Locality Text Field */}
+              {/* ✅ Locality Text Field */}
               <div className="mb-3">
                 <label className="form-label">Locality</label>
                 <input
@@ -137,6 +135,7 @@ function CollectorSetup() {
                   required
                 />
               </div>
+
               <button type="submit" className="btn btn-success w-100">
                 Save Setup
               </button>
