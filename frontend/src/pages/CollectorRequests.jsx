@@ -19,9 +19,16 @@ function CollectorRequests() {
     const fetchRequests = async () => {
       try {
         const requestsRef = collection(db, "pickupRequests");
-        const q = query(requestsRef, where("collectorId", "==", collectorId), where("status", "==", "pending"));
+        const q = query(
+          requestsRef,
+          where("collectorId", "==", collectorId),
+          where("status", "==", "pending")
+        );
         const querySnapshot = await getDocs(q);
-        const fetchedRequests = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const fetchedRequests = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
         setRequests(fetchedRequests);
       } catch (err) {
         console.error("Error fetching requests:", err);
@@ -67,13 +74,22 @@ function CollectorRequests() {
           {requests.map(req => (
             <div key={req.id} className="list-group-item mb-2">
               <h5>{req.scrapType} Pickup</h5>
-              <p><strong>Weight:</strong> {req.weight} kg</p>
               <p><strong>Date:</strong> {req.date}</p>
               <p><strong>Time:</strong> {req.time}</p>
               <p><strong>User Address:</strong> {req.pickupAddress}</p>
               <div>
-                <button className="btn btn-success me-2" onClick={() => handleAccept(req.id)}>Accept</button>
-                <button className="btn btn-danger" onClick={() => handleReject(req.id)}>Reject</button>
+                <button
+                  className="btn btn-success me-2"
+                  onClick={() => handleAccept(req.id)}
+                >
+                  Accept
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => handleReject(req.id)}
+                >
+                  Reject
+                </button>
               </div>
             </div>
           ))}

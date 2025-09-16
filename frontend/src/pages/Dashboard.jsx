@@ -27,6 +27,7 @@ function Dashboard() {
   const [recentActivity, setRecentActivity] = useState([]);
   const [myBookings, setMyBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true); // <-- New
 
   // edit profile states
   const [editing, setEditing] = useState(false);
@@ -39,68 +40,81 @@ function Dashboard() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const user = auth.currentUser;
-      if (!user) {
-        navigate("/login");
-        return;
-      }
+      const unsubscribe = auth.onAuthStateChanged(async (user) => {
+        if (!user) {
+          setAuthLoading(false);
+          navigate("/login");
+          return;
+        }
 
-      try {
-        // Fetch Profile
-        const profileRef = doc(db, "users", user.uid);
-        const profileSnap = await getDoc(profileRef);
-        if (profileSnap.exists()) {
-          setProfile(profileSnap.data());
-          setEditForm(profileSnap.data());
+        try {
+          // Fetch Profile
+          const profileRef = doc(db, "users", user.uid);
+          const profileSnap = await getDoc(profileRef);
+          if (profileSnap.exists()) {
+            setProfile(profileSnap.data());
+            setEditForm(profileSnap.data());
 
-          const data = profileSnap.data();
+            const data = profileSnap.data();
 
-          if (data.role === "user") {
-            // --- Real-time listener for accepted pickups ---
-            const requestsRef = collection(db, "pickupRequests");
-            const q = query(requestsRef, where("userId", "==", user.uid));
+            if (data.role === "user") {
+              // --- Real-time listener for user pickups ---
+              const requestsRef = collection(db, "pickupRequests");
+              const q = query(requestsRef, where("userId", "==", user.uid));
 
-            const unsubscribe = onSnapshot(q, (snapshot) => {
-              const activities = [];
-              snapshot.forEach((doc) => {
-                const requestData = doc.data();
-                activities.push({ id: doc.id, ...requestData });
+              const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+                const activities = [];
+                snapshot.forEach((doc) => {
+                  const requestData = doc.data();
+                  activities.push({ id: doc.id, ...requestData });
+                });
+
+                // ✅ Only count completed requests
+                let completed = activities.filter(r => r.status === "completed");
+
+                let totalOrders = completed.length;
+                let totalEarnings = completed.reduce(
+                  (sum, r) => sum + (r.amount || 0),
+                  0
+                );
+                let recyclables = completed.reduce(
+                  (sum, r) => sum + (Number(r.weight) || 0),
+                  0
+                );
+
+                setStats({ totalOrders, totalEarnings, recyclables });
+                setRecentActivity(activities.slice(-5).reverse()); // last 5 requests
               });
 
-              // Update dashboard stats + activities
-              let totalOrders = activities.length;
-              let totalEarnings = activities.reduce(
-                (sum, r) => sum + (r.price || 0),
-                0
+              setLoading(false);
+              setAuthLoading(false);
+              return () => unsubscribeSnapshot();
+            } else if (data.role === "collector") {
+              // Fetch Collector Bookings
+              const bookingsRef = collection(db, "pickupRequests");
+              const q = query(
+                bookingsRef,
+                where("collectorId", "==", user.uid),
+                where("status", "in", ["accepted", "completed"])
               );
-              let recyclables = activities.reduce(
-                (sum, r) => sum + (Number(r.weight) || 0),
-                0
-              );
+              const bookingsSnap = await getDocs(q);
 
-              setStats({ totalOrders, totalEarnings, recyclables });
-              setRecentActivity(activities.slice(-5).reverse()); // last 5 requests
-            });
-
-            return () => unsubscribe();
-          } else if (data.role === "collector") {
-            // Fetch Collector Bookings
-            const bookingsRef = collection(db, "pickupRequests");
-            const q = query(bookingsRef, where("collectorId", "==", user.uid));
-            const bookingsSnap = await getDocs(q);
-
-            let bookings = [];
-            bookingsSnap.forEach((doc) => {
-              bookings.push({ id: doc.id, ...doc.data() });
-            });
-            setMyBookings(bookings);
+              let bookings = [];
+              bookingsSnap.forEach((doc) => {
+                bookings.push({ id: doc.id, ...doc.data() });
+              });
+              setMyBookings(bookings);
+            }
           }
+        } catch (error) {
+          console.error("Error fetching dashboard data:", error);
+        } finally {
+          setLoading(false);
+          setAuthLoading(false);
         }
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      } finally {
-        setLoading(false);
-      }
+      });
+
+      return () => unsubscribe();
     };
 
     fetchData();
@@ -129,6 +143,7 @@ function Dashboard() {
   const handleBookPickup = () => navigate("/pickup");
   const handleViewPrices = () => navigate("/prices");
 
+  if (authLoading) return <p className="text-center mt-5">Loading...</p>;
   if (loading) return <p className="text-center mt-5">Loading...</p>;
   if (!profile) return <p className="text-center mt-5">No profile found.</p>;
 
@@ -290,10 +305,10 @@ function Dashboard() {
                           <strong>Weight:</strong> {activity.weight} kg
                         </p>
                         <p className="mb-1">
-                          <strong>Status:</strong>
+                          <strong>Status:</strong>{" "}
                           <span
                             className={
-                              activity.status === "accepted"
+                              activity.status === "completed"
                                 ? "text-success"
                                 : "text-muted"
                             }
@@ -307,8 +322,8 @@ function Dashboard() {
                           </p>
                         )}
 
-                        {/* Button to see full summary */}
-                        {activity.status === "accepted" && (
+                        {/* ✅ Button only if completed */}
+                        {activity.status === "completed" && (
                           <button
                             className="btn btn-outline-success btn-sm mt-2"
                             onClick={() =>
@@ -439,7 +454,6 @@ function Dashboard() {
               >
                 View Requests
               </button>
-              {/* logout already above */}
             </div>
           </div>
 
@@ -448,8 +462,28 @@ function Dashboard() {
             {myBookings.length > 0 ? (
               <ul>
                 {myBookings.map((booking, index) => (
-                  <li key={index}>
-                    {booking.scrapType} - {booking.date} ({booking.weight} kg)
+                  <li
+                    key={index}
+                    className="d-flex justify-content-between align-items-center"
+                  >
+                    <span>
+                      {booking.scrapType} - {booking.date}
+                      {booking.status === "completed" && (
+                        <span className="badge bg-success ms-2">Completed</span>
+                      )}
+                    </span>
+
+                    {/* ✅ Show Complete Pickup button only if accepted */}
+                    {booking.status === "accepted" && (
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() =>
+                          navigate(`/complete-pickup/${booking.id}`)
+                        }
+                      >
+                        Complete Pickup
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>

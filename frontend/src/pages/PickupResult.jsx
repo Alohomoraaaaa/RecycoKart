@@ -39,7 +39,8 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
 
 function PickupResult() {
   const location = useLocation();
-  const { scrapType, time, userLat, userLng, address, weight, date, pickupAddress } = location.state;
+  // ✅ Removed weight
+  const { scrapType, time, userLat, userLng, address, date, pickupAddress } = location.state;
 
   const [collectors, setCollectors] = useState([]);
   const [selectedCollector, setSelectedCollector] = useState(null);
@@ -109,13 +110,13 @@ function PickupResult() {
       collectorId: selectedCollector.id,
       collectorName: selectedCollector.name,
       scrapType,
-      weight,
       date,
       time,
       status: "pending",
       userLat,
       userLng,
       pickupAddress,
+      address,
     });
 
     alert(`Request sent to ${selectedCollector.name}!`);

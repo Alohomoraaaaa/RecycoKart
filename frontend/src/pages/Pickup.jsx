@@ -5,7 +5,6 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 function Pickup() {
   const [scrapType, setScrapType] = useState("");
-  const [weight, setWeight] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [error, setError] = useState("");
@@ -14,7 +13,7 @@ function Pickup() {
 
   const navigate = useNavigate();
 
-  // Fetch logged-in user's address/locality from Firestore
+  // ✅ Fetch logged-in user's address/locality from Firestore
   useEffect(() => {
     const fetchUserAddress = async () => {
       const user = auth.currentUser;
@@ -30,19 +29,30 @@ function Pickup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!scrapType) { setError("Please select a recyclable type"); return; }
-    if (weight <= 0) { setError("Weight must be greater than 0 kg"); return; }
-    if (!date) { setError("Please select a pickup date"); return; }
+    if (!scrapType) {
+      setError("Please select a recyclable type");
+      return;
+    }
+    if (!date) {
+      setError("Please select a pickup date");
+      return;
+    }
 
     const selectedDate = new Date(date);
-    const today = new Date(); 
-    today.setHours(0,0,0,0);
-    if (selectedDate < today) { setError("Pickup date cannot be in the past"); return; }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (selectedDate < today) {
+      setError("Pickup date cannot be in the past");
+      return;
+    }
 
-    if (!time) { setError("Please select a pickup time"); return; }
-    if (!pickupAddress.trim()) { 
-      setError("Please enter your full pickup address"); 
-      return; 
+    if (!time) {
+      setError("Please select a pickup time");
+      return;
+    }
+    if (!pickupAddress.trim()) {
+      setError("Please enter your full pickup address");
+      return;
     }
     if (!address.trim()) {
       setError("Please enter your locality");
@@ -62,20 +72,23 @@ function Pickup() {
 
       // ✅ Convert text-based locality → lat/lng using OpenStreetMap API
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          address
+        )}`
       );
       const data = await response.json();
       if (!data.length) {
-        setError("❌ Could not fetch location coordinates for the entered locality.");
+        setError(
+          "❌ Could not fetch location coordinates for the entered locality."
+        );
         return;
       }
       const { lat, lon } = data[0];
 
-      // Navigate to PickupResult with locality-based coordinates
+      // ✅ Navigate to PickupResult without weight
       navigate("/pickupresult", {
         state: {
           scrapType,
-          weight,
           date,
           time,
           userLat: parseFloat(lat),
@@ -116,17 +129,6 @@ function Pickup() {
                 </select>
               </div>
 
-              {/* Weight */}
-              <div className="mb-3">
-                <label className="form-label">Approx. Weight (kg)</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
-                />
-              </div>
-
               {/* Pickup Date */}
               <div className="mb-3">
                 <label className="form-label">Preferred Pickup Date</label>
@@ -161,7 +163,7 @@ function Pickup() {
                 ></textarea>
               </div>
 
-              {/* Locality (UI word, stored as address in DB) */}
+              {/* Locality */}
               <div className="mb-3">
                 <label className="form-label">Locality</label>
                 <input

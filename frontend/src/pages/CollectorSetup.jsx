@@ -8,7 +8,8 @@ function CollectorSetup() {
   const navigate = useNavigate();
   const [scrapTypes, setScrapTypes] = useState([]);
   const [availability, setAvailability] = useState({ start: "", end: "" });
-  const [locality, setLocality] = useState(""); // ✅ Locality still kept
+  const [locality, setLocality] = useState(""); // ✅ For users -> address
+  const [officeAddress, setOfficeAddress] = useState(""); // ✅ For collectors -> officeAddress
   const [message, setMessage] = useState("");
 
   const options = ["Plastic", "Metal", "Paper", "E-Waste", "Glass", "Other"];
@@ -33,7 +34,11 @@ function CollectorSetup() {
       return;
     }
     if (!locality) {
-      setMessage("Please select your locality.");
+      setMessage("Please enter your locality.");
+      return;
+    }
+    if (!officeAddress) {
+      setMessage("Please enter your complete office address.");
       return;
     }
 
@@ -45,7 +50,7 @@ function CollectorSetup() {
         address: locality,
       });
 
-      // ✅ Step 2: Get live GPS location instead of text → coords API
+      // ✅ Step 2: Get live GPS location
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const lat = position.coords.latitude;
@@ -55,11 +60,12 @@ function CollectorSetup() {
           await updateDoc(doc(db, "collectors", userId), {
             scrapTypes,
             availability,
+            officeAddress, // ✅ full address saved separately
             lat,
             lng: lon,
           });
 
-          setMessage("✅ Collector setup saved with live GPS location!");
+          setMessage("✅ Collector setup saved with live GPS & office address!");
           navigate("/");
         },
         (error) => {
@@ -134,6 +140,19 @@ function CollectorSetup() {
                   placeholder="Enter your locality"
                   required
                 />
+              </div>
+
+              {/* ✅ Office Address Textarea */}
+              <div className="mb-3">
+                <label className="form-label">Complete Office Address</label>
+                <textarea
+                  className="form-control"
+                  rows="3"
+                  value={officeAddress}
+                  onChange={(e) => setOfficeAddress(e.target.value)}
+                  placeholder="Enter your complete office address"
+                  required
+                ></textarea>
               </div>
 
               <button type="submit" className="btn btn-success w-100">
