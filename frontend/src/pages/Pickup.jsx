@@ -44,6 +44,10 @@ function Pickup() {
       setError("Please enter your full pickup address"); 
       return; 
     }
+    if (!address.trim()) {
+      setError("Please enter your locality");
+      return;
+    }
 
     setError("");
 
@@ -56,30 +60,30 @@ function Pickup() {
         });
       }
 
-      // Get user location
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const userLat = position.coords.latitude;
-          const userLng = position.coords.longitude;
-
-          // Navigate to PickupResult
-          navigate("/pickupresult", {
-            state: {
-              scrapType,
-              weight,
-              date,
-              time,
-              userLat,
-              userLng,
-              address, // from state
-              pickupAddress,
-            },
-          });
-        },
-        () => {
-          setError("Unable to fetch location. Please enable GPS.");
-        }
+      // ✅ Convert text-based locality → lat/lng using OpenStreetMap API
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
       );
+      const data = await response.json();
+      if (!data.length) {
+        setError("❌ Could not fetch location coordinates for the entered locality.");
+        return;
+      }
+      const { lat, lon } = data[0];
+
+      // Navigate to PickupResult with locality-based coordinates
+      navigate("/pickupresult", {
+        state: {
+          scrapType,
+          weight,
+          date,
+          time,
+          userLat: parseFloat(lat),
+          userLng: parseFloat(lon),
+          address, // from state
+          pickupAddress,
+        },
+      });
     } catch (err) {
       console.error(err);
       setError("Error connecting to server");
@@ -157,7 +161,7 @@ function Pickup() {
                 ></textarea>
               </div>
 
-              {/* Locality (UI word) */}
+              {/* Locality (UI word, stored as address in DB) */}
               <div className="mb-3">
                 <label className="form-label">Locality</label>
                 <input
