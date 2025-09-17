@@ -62,7 +62,7 @@ function Dashboard() {
               const requestsRef = collection(db, "pickupRequests");
               const q = query(requestsRef, where("userId", "==", user.uid));
 
-              const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+              const unsubscribeSnapshot = onSnapshot(q, async (snapshot) => {
                 const activities = [];
                 snapshot.forEach((doc) => {
                   const requestData = doc.data();
@@ -84,8 +84,18 @@ function Dashboard() {
 
                 setStats({ totalOrders, totalEarnings, recyclables });
                 setRecentActivity(activities.slice(-5).reverse()); // last 5 requests
+                // ✅ Update the user's document in Firestore
+                try {
+                  const userRef = doc(db, "users", user.uid);
+                  await updateDoc(userRef, {
+                    totalOrders,
+                    totalEarnings,
+                    recyclables
+                  });
+                } catch (err) {
+                  console.error("Error updating stats:", err);
+                }
               });
-
               setLoading(false);
               setAuthLoading(false);
               return () => unsubscribeSnapshot();
