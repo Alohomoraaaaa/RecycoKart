@@ -1,73 +1,70 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 function Register() {
   const navigate = useNavigate();
-
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
-    password: "",
     contact: "",
     role: "",
   });
-
   const [message, setMessage] = useState("");
 
-  // Handle input change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle form submit
-  const handleSubmit = async (e) => {
+  const handleGoogleSignIn = async (e) => {
     e.preventDefault();
 
-    // Validate phone number (10 digits)
+    // validate phone number
     if (!/^\d{10}$/.test(formData.contact)) {
       setMessage("Please enter a valid 10-digit contact number.");
       return;
     }
 
     try {
-      // Create user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-      const user = userCredential.user;
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
 
-      // Save basic user details in Firestore (🚫 no address here)
-      await setDoc(doc(db, "users", user.uid), {
-        name: formData.name,
-        email: formData.email,
-        contact: formData.contact,
-        role: formData.role,
-      });
+      // check if user already exists
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
 
-      // If user is a collector, create a collector document for setup
-      if (formData.role === "collector") {
-        await setDoc(doc(db, "collectors", user.uid), {
-          scrapTypes: [],
-          availability: { start: "", end: "" }, // will update later
+      if (!userSnap.exists()) {
+        // new user — save details
+        await setDoc(userRef, {
+          name: formData.name,
+          email: user.email,
+          contact: formData.contact,
+          role: formData.role,
         });
-        navigate("/collector-setup"); // redirect to collector setup
+
+        if (formData.role === "collector") {
+          await setDoc(doc(db, "collectors", user.uid), {
+            scrapTypes: [],
+            availability: { start: "", end: "" },
+          });
+          navigate("/collector-setup");
+        } else {
+          navigate("/");
+        }
       } else {
-        navigate("/"); // redirect normal users
+        // existing user — just redirect based on role
+        const data = userSnap.data();
+        if (data.role === "collector") {
+          navigate("/collector-setup");
+        } else {
+          navigate("/");
+        }
       }
 
       setMessage("✅ Registration successful!");
-      setFormData({
-        name: "",
-        email: "",
-        password: "",
-        contact: "",
-        role: "",
-      });
+      setFormData({ name: "", contact: "", role: "" });
     } catch (error) {
       setMessage("❌ " + error.message);
     }
@@ -79,7 +76,7 @@ function Register() {
       <div className="row justify-content-center">
         <div className="col-md-6">
           <div className="card shadow-sm p-4">
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleGoogleSignIn}>
               {/* Full Name */}
               <div className="mb-3">
                 <label className="form-label">Full Name</label>
@@ -94,35 +91,7 @@ function Register() {
                 />
               </div>
 
-              {/* Email */}
-              <div className="mb-3">
-                <label className="form-label">Email Address</label>
-                <input
-                  type="email"
-                  name="email"
-                  className="form-control"
-                  placeholder="Enter Your Email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              {/* Password */}
-              <div className="mb-3">
-                <label className="form-label">Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  className="form-control"
-                  placeholder="Enter Password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              {/* Phone Number */}
+              {/* Contact */}
               <div className="mb-3">
                 <label className="form-label">Contact Number</label>
                 <input
@@ -136,9 +105,7 @@ function Register() {
                 />
               </div>
 
-              {/* 🚫 Removed Locality */}
-
-              {/* Role Selection */}
+              {/* Role */}
               <div className="mb-3">
                 <label className="form-label">I Am Registering As</label>
                 <select
@@ -156,11 +123,10 @@ function Register() {
 
               {/* Submit Button */}
               <button type="submit" className="btn btn-success w-100">
-                Register
+                Sign Up with Google
               </button>
             </form>
 
-            {/* Message */}
             {message && (
               <p
                 className={`text-center mt-3 ${

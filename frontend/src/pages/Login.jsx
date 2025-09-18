@@ -1,22 +1,45 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth, db } from "../firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const auth = getAuth();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleGoogleLogin = async () => {
     setError("");
+    const provider = new GoogleAuthProvider();
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Check if user already exists in Firestore
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+
+      if (!userDoc.exists()) {
+        // New user → create minimal record (role will be set later)
+        await setDoc(doc(db, "users", user.uid), {
+          name: user.displayName || "",
+          email: user.email || "",
+          contact: "",
+          role: "",
+        });
+      } else {
+        const userData = userDoc.data();
+
+        // Redirect based on role if set
+        if (userData.role === "collector") {
+          return navigate("/collector-setup");
+        } else if (userData.role === "user") {
+          return navigate("/dashboard");
+        }
+      }
+
       alert("Login successful!");
-      navigate("/dashboard"); // Redirect after login (change as needed)
+      navigate("/dashboard");
     } catch (err) {
       setError(err.message);
     }
@@ -27,41 +50,23 @@ function Login() {
       <div className="card p-4 shadow-lg" style={{ width: "400px" }}>
         <h2 className="text-center text-success mb-4">Login</h2>
 
-        <form onSubmit={handleLogin}>
-          {/* Email */}
-          <div className="mb-3">
-            <label className="form-label">Email Address</label>
-            <input
-              type="email"
-              className="form-control"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+        {/* Info text */}
+        <div className="mb-3 text-center">
+          <p className="text-muted">
+            Login using your Google account to continue
+          </p>
+        </div>
 
-          {/* Password */}
-          <div className="mb-3">
-            <label className="form-label">Password</label>
-            <input
-              type="password"
-              className="form-control"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+        {/* Google login button */}
+        <button
+          onClick={handleGoogleLogin}
+          className="btn btn-outline-success w-100 mb-3"
+        >
+          <i className="bi bi-google me-2"></i> Sign in with Google
+        </button>
 
-          {/* Error message */}
-          {error && <p className="text-danger text-center">{error}</p>}
-
-          {/* Submit Button */}
-          <button type="submit" className="btn btn-success w-100">
-            Login
-          </button>
-        </form>
+        {/* Error message */}
+        {error && <p className="text-danger text-center">{error}</p>}
 
         <p className="text-center mt-3">
           Don’t have an account? <Link to="/register">Register</Link>
