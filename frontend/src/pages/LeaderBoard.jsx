@@ -1,14 +1,45 @@
 import { useEffect, useState } from "react";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { db } from "../firebase"; // Import the db object
 
 function LeaderBoard() {
   const [leaders, setLeaders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/LeaderBoard") // Flask API
-      .then((res) => res.json())
-      .then((data) => setLeaders(data))
-      .catch((err) => console.error("Error fetching leaderboard:", err));
+    const fetchLeaders = async () => {
+      try {
+        const usersRef = collection(db, "users");
+        // Create a query to order the users by recyclables in descending order
+        const q = query(usersRef, orderBy("recyclables", "desc"));
+        
+        const querySnapshot = await getDocs(q);
+        
+        const leadersList = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          // Extract name and recyclables, as seen in your document
+          leadersList.push({
+            user: data.name,
+            weight: data.recyclables,
+          });
+        });
+        
+        setLeaders(leadersList);
+        setLoading(false);
+
+      } catch (err) {
+        console.error("Error fetching leaderboard:", err);
+        setLoading(false);
+      }
+    };
+    
+    fetchLeaders();
   }, []);
+
+  if (loading) {
+    return <p>Loading leaderboard...</p>;
+  }
 
   return (
     <div className="container my-5">
