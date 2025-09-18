@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth, db } from "../firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 
 function Login() {
   const [error, setError] = useState("");
@@ -20,26 +20,25 @@ function Login() {
       const userDoc = await getDoc(doc(db, "users", user.uid));
 
       if (!userDoc.exists()) {
-        // New user → create minimal record (role will be set later)
-        await setDoc(doc(db, "users", user.uid), {
-          name: user.displayName || "",
-          email: user.email || "",
-          contact: "",
-          role: "",
-        });
-      } else {
-        const userData = userDoc.data();
-
-        // Redirect based on role if set
-        if (userData.role === "collector") {
-          return navigate("/dashboard");
-        } else if (userData.role === "user") {
-          return navigate("/dashboard");
-        }
+        // Block login if user hasn't registered
+        setError(
+          "❌ You need to register first before logging in with Google."
+        );
+        await auth.signOut(); // logout the Google session
+        return;
       }
 
-      alert("Login successful!");
-      navigate("/dashboard");
+      const userData = userDoc.data();
+
+      // Redirect based on role
+      if (userData.role === "collector") {
+        navigate("/collector-setup");
+      } else if (userData.role === "user") {
+        navigate("/dashboard");
+      } else {
+        setError("❌ Role not assigned. Please register properly.");
+        await auth.signOut();
+      }
     } catch (err) {
       setError(err.message);
     }
