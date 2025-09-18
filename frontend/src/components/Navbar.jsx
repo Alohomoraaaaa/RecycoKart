@@ -13,7 +13,7 @@ function Navbar() {
   const navigate = useNavigate();
 
   useEffect(() => {
-   const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
 
@@ -87,6 +87,11 @@ function Navbar() {
                 <li className="nav-item">
                   <Link className="nav-link" to="/leaderboard">
                     LeaderBoard
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/waste-prediction">
+                    Waste Prediction
                   </Link>
                 </li>
                 <li className="nav-item">

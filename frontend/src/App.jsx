@@ -12,6 +12,7 @@ import CollectorRequests from "./pages/CollectorRequests";
 import PickupSummary from "./pages/PickupSummary";
 import LeaderBoard from "./pages/LeaderBoard";
 import CompletePickup from "./pages/CompletePickup";
+import WastePrediction from "./pages/WastePrediction";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
         <Route path="/pickup-summary" element={<PickupSummary />} />
         <Route path="/leaderboard" element={<LeaderBoard />} />
         <Route path="/complete-pickup/:requestId" element={<CompletePickup />} />
+        <Route path="/waste-prediction" element={<WastePrediction />} />
       </Routes>
     </Router>
   );
