@@ -32,7 +32,7 @@ function Login() {
 
       // Redirect based on role
       if (userData.role === "collector") {
-        navigate("/collector-setup");
+        navigate("/dashboard");
       } else if (userData.role === "user") {
         navigate("/dashboard");
       } else {
