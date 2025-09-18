@@ -1,20 +1,29 @@
 import React, { useEffect, useState } from "react";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import { collection, query, where, getDocs, updateDoc, doc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 function CollectorRequests() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [collectorId, setCollectorId] = useState(null);
   const navigate = useNavigate();
-  const collectorId = auth.currentUser?.uid; // assuming collector is logged in
 
   useEffect(() => {
-    if (!collectorId) {
-      navigate("/login");
-      return;
-    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCollectorId(user.uid); // set collector id once user is ready
+      } else {
+        navigate("/login"); // no user logged in
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
+
+  useEffect(() => {
+    if (!collectorId) return; // wait for auth
 
     const fetchRequests = async () => {
       try {
@@ -25,7 +34,7 @@ function CollectorRequests() {
           where("status", "==", "pending")
         );
         const querySnapshot = await getDocs(q);
-        const fetchedRequests = querySnapshot.docs.map(doc => ({
+        const fetchedRequests = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
@@ -38,12 +47,12 @@ function CollectorRequests() {
     };
 
     fetchRequests();
-  }, [collectorId, navigate]);
+  }, [collectorId]);
 
   const handleAccept = async (requestId) => {
     try {
       await updateDoc(doc(db, "pickupRequests", requestId), { status: "accepted" });
-      setRequests(prev => prev.filter(req => req.id !== requestId));
+      setRequests((prev) => prev.filter((req) => req.id !== requestId));
       alert("Request Accepted!");
     } catch (err) {
       console.error(err);
@@ -54,7 +63,7 @@ function CollectorRequests() {
   const handleReject = async (requestId) => {
     try {
       await updateDoc(doc(db, "pickupRequests", requestId), { status: "rejected" });
-      setRequests(prev => prev.filter(req => req.id !== requestId));
+      setRequests((prev) => prev.filter((req) => req.id !== requestId));
       alert("Request Rejected");
     } catch (err) {
       console.error(err);
@@ -71,7 +80,7 @@ function CollectorRequests() {
         <p className="text-center">No pending requests at the moment.</p>
       ) : (
         <div className="list-group">
-          {requests.map(req => (
+          {requests.map((req) => (
             <div key={req.id} className="list-group-item mb-2">
               <h5>{req.scrapType} Pickup</h5>
               <p><strong>Date:</strong> {req.date}</p>
