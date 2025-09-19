@@ -1,3 +1,4 @@
+//App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
@@ -13,6 +14,7 @@ import PickupSummary from "./pages/PickupSummary";
 import LeaderBoard from "./pages/LeaderBoard";
 import CompletePickup from "./pages/CompletePickup";
 import WastePrediction from "./pages/WastePrediction";
+import PriceGraph from "./pages/PriceGraph";
 
 function App() {
   return (
@@ -32,6 +34,7 @@ function App() {
         <Route path="/leaderboard" element={<LeaderBoard />} />
         <Route path="/complete-pickup/:requestId" element={<CompletePickup />} />
         <Route path="/waste-prediction" element={<WastePrediction />} />
+        <Route path="/price-graph" element={<PriceGraph />} />
       </Routes>
     </Router>
   );
