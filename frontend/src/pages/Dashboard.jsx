@@ -77,10 +77,18 @@ function Dashboard() {
                   (sum, r) => sum + (r.amount || 0),
                   0
                 );
-                let recyclables = completed.reduce(
-                  (sum, r) => sum + (Number(r.weight) || 0),
-                  0
-                );
+                let recyclables = completed.reduce((sum, r) => {
+                  if (Array.isArray(r.scraps)) {
+                    const totalWeight = r.scraps.reduce(
+                      (subSum, s) => subSum + (Number(s.weight) || 0),
+                      0
+                    );
+                    return sum + totalWeight;
+                  } else if (r.weight) {
+                    return sum + Number(r.weight);
+                  }
+                  return sum;
+                }, 0);
 
                 setStats({ totalOrders, totalEarnings, recyclables });
                 setRecentActivity(activities.slice(-5).reverse()); // last 5 requests
@@ -312,7 +320,11 @@ function Dashboard() {
                           <strong>Date:</strong> {activity.date}
                         </p>
                         <p className="mb-1">
-                          <strong>Weight:</strong> {activity.weight} kg
+                          <strong>Total Weight:</strong>{" "}
+                          {Array.isArray(activity.scraps)
+                            ? activity.scraps.reduce((sum, s) => sum + (Number(s.weight) || 0), 0)
+                            : activity.weight || 0}{" "}
+                          kg
                         </p>
                         <p className="mb-1">
                           <strong>Status:</strong>{" "}
