@@ -3,15 +3,37 @@ import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 
+// ✅ Function to dynamically load PayPal SDK
+function loadPayPalScript(clientId, currency = "USD") {
+  return new Promise((resolve, reject) => {
+    // Check if script already exists to prevent duplicates
+    if (document.getElementById("paypal-sdk")) {
+      // If the currency is different, remove the old script
+      if (window.paypal && window.paypal.config.currency !== currency) {
+        document.getElementById("paypal-sdk").remove();
+      } else {
+        resolve(window.paypal);
+        return;
+      }
+    }
+
+    const script = document.createElement("script");
+    script.id = "paypal-sdk";
+    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=${currency}`;
+    script.onload = () => resolve(window.paypal);
+    script.onerror = (err) => reject(err);
+    document.body.appendChild(script);
+  });
+}
+
 function CompletePickup() {
-  const { requestId } = useParams(); // pickup request id
+  const { requestId } = useParams();
   const [request, setRequest] = useState(null);
-  const [scraps, setScraps] = useState([]); // array of { scrap_type, weight }
+  const [scraps, setScraps] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
-  const [userDetails, setUserDetails] = useState(null); // NEW: for user data
+  const [userDetails, setUserDetails] = useState(null);
   const navigate = useNavigate();
 
-  // Base prices per scrap type
   const BASE_PRICES = {
     Plastic: 20,
     "E-Waste": 50,
@@ -21,7 +43,9 @@ function CompletePickup() {
     Other: 10
   };
 
-  // Fetch pickup request + user info
+  const PAYPAL_CLIENT_ID = "ARFNCBD4t0mi9f6UbljwNv2myef97Foh4VsssMDJDft-oVwHJVocYZJIP4R4h0m2GGUNHMQCIXFQnnWX";
+
+  // ✅ Fetch pickup request and user details
   useEffect(() => {
     const fetchRequest = async () => {
       try {
@@ -31,27 +55,19 @@ function CompletePickup() {
         if (requestSnap.exists()) {
           const data = requestSnap.data();
           setRequest({ id: requestSnap.id, ...data });
-
-          // Fetch user details from users collection
+          
           if (data.userId) {
             const userRef = doc(db, "users", data.userId);
             const userSnap = await getDoc(userRef);
-
             if (userSnap.exists()) {
               setUserDetails(userSnap.data());
             } else {
               console.warn("User not found for pickup:", data.userId);
             }
           }
-
-          // Initialize scraps array from scrapTypes array
+          
           if (Array.isArray(data.scrapTypes) && data.scrapTypes.length > 0) {
-            setScraps(
-              data.scrapTypes.map((type) => ({
-                scrap_type: type,
-                weight: 0 // default weight
-              }))
-            );
+            setScraps(data.scrapTypes.map(type => ({ scrap_type: type, weight: 0 })));
           } else {
             alert("No scrap types found for this request.");
             navigate("/dashboard");
@@ -64,49 +80,75 @@ function CompletePickup() {
         console.error("Error fetching request:", err);
       }
     };
-
     fetchRequest();
   }, [requestId, navigate]);
 
-  // Auto-calculate total amount whenever scraps change
+  // ✅ Auto-calculate total amount
   useEffect(() => {
     const total = scraps.reduce((sum, item) => {
       const price = BASE_PRICES[item.scrap_type] || 10;
-      return sum + item.weight * price;
+      return sum + (parseFloat(item.weight) || 0) * price;
     }, 0);
     setTotalAmount(total.toFixed(2));
   }, [scraps]);
 
+  // ✅ Dynamically render PayPal button
+  useEffect(() => {
+    if (totalAmount > 0) {
+      loadPayPalScript(PAYPAL_CLIENT_ID, "USD")
+        .then((paypal) => {
+          paypal.Buttons({
+            createOrder: (data, actions) => {
+              return actions.order.create({
+                purchase_units: [{ 
+                  amount: { 
+                    value: totalAmount.toString(),
+                    currency_code: "USD" 
+                  }
+                }],
+              });
+            },
+            onApprove: async (data, actions) => {
+              const details = await actions.order.capture();
+              console.log("Payment successful:", details);
+
+              // Update Firestore after successful payment
+              const requestRef = doc(db, "pickupRequests", requestId);
+              await updateDoc(requestRef, {
+                scraps: scraps,
+                amount: parseFloat(totalAmount),
+                status: "completed",
+                paymentStatus: "Paid",
+                paypalDetails: details // Save payment details for records
+              });
+
+              alert("Payment Successful!");
+              navigate("/dashboard");
+            },
+            onError: (err) => {
+              console.error("PayPal error:", err);
+              alert("Payment failed. Please try again.");
+            },
+          }).render("#paypal-button-container");
+        })
+        .catch((err) => console.error("Failed to load PayPal SDK:", err));
+    }
+  }, [totalAmount, requestId, navigate, scraps]);
+
   // Handle weight input change
   const handleWeightChange = (index, value) => {
     const newScraps = [...scraps];
-    newScraps[index].weight = parseFloat(value) || 0;
+    newScraps[index].weight = value; 
     setScraps(newScraps);
   };
-
-  // Submit handler
-  const handleSubmit = async (e) => {
+  
+  // The form submit handler is now for validation only
+  const handleFormSubmit = (e) => {
     e.preventDefault();
-
-    if (!scraps.every((item) => item.weight > 0)) {
-      alert("Please enter weight for all scraps");
-      return;
+    if (!scraps.every(item => parseFloat(item.weight) > 0)) {
+      alert("Please enter a valid weight for all scraps.");
     }
-
-    try {
-      const requestRef = doc(db, "pickupRequests", requestId);
-      await updateDoc(requestRef, {
-        scraps: scraps,
-        amount: parseFloat(totalAmount),
-        status: "completed"
-      });
-
-      alert("Pickup completed successfully!");
-      navigate("/dashboard");
-    } catch (err) {
-      console.error("Error updating pickup:", err);
-      alert("Error updating pickup");
-    }
+    // The PayPal button will handle the rest
   };
 
   if (!request) return <p className="text-center mt-5">Loading pickup...</p>;
@@ -129,11 +171,10 @@ function CompletePickup() {
                 {userDetails.contact}
               </a>
             </p>
-
           </>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleFormSubmit}>
           <h5 className="mt-3">Scrap Details</h5>
           {scraps.map((item, index) => (
             <div className="mb-3" key={index}>
@@ -156,9 +197,14 @@ function CompletePickup() {
             <input type="text" className="form-control" value={totalAmount} disabled />
           </div>
 
-          <button type="submit" className="btn btn-success w-100">
-            Complete Pickup
-          </button>
+          {/* Render PayPal button only if totalAmount is calculated and valid */}
+          {totalAmount > 0 ? (
+            <div id="paypal-button-container"></div>
+          ) : (
+            <button type="submit" className="btn btn-success" disabled>
+              Enter Weights to Pay
+            </button>
+          )}
         </form>
       </div>
     </div>

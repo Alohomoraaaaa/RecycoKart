@@ -113,3 +113,34 @@ def predict_household(input: HouseholdInput):
         "avg_recycling_rate": round(result["Recycling Rate (%)"], 2),
         "approx_cost_per_ton": round(result["Cost of Waste Management (₹/Ton)"], 2)
     }
+# --------------------------
+# Scrap Price Prediction Model
+# --------------------------
+from datetime import datetime
+
+price_model = joblib.load("rutuja/ml/price_prediction_model/price_prediction_model.pkl")
+price_encoder = joblib.load("rutuja/ml/price_prediction_model/price_encoder.pkl")
+
+# Load historical price data
+price_df = pd.read_csv("rutuja/ml/price_prediction_model/cleaned_weekly_scrap_prices.csv")
+
+@app.get("/price_history")
+def price_history(waste_type: str, start_date: str, end_date: str):
+    try:
+        start = pd.to_datetime(start_date)
+        end = pd.to_datetime(end_date)
+    except Exception:
+        return {"error": "Invalid date format. Use YYYY-MM-DD."}
+
+    # Filter data
+    filtered = price_df[
+        (price_df["Waste_Type"].str.lower() == waste_type.lower()) &
+        (price_df["Date"] >= start) &
+        (price_df["Date"] <= end)
+    ]
+
+    if filtered.empty:
+        return []
+
+    # Return as JSON
+    return filtered.to_dict(orient="records")
