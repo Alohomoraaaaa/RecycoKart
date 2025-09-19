@@ -16,7 +16,6 @@ import PickupSummary from "./pages/PickupSummary";
 import LeaderBoard from "./pages/LeaderBoard";
 import CompletePickup from "./pages/CompletePickup";
 import WastePrediction from "./pages/WastePrediction";
-import ScrapClassifier from "./pages/ScrapClassifier";
 import PriceGraph from "./pages/PriceGraph";
 
 function App() {
@@ -37,7 +36,6 @@ function App() {
         <Route path="/leaderboard" element={<LeaderBoard />} />
         <Route path="/complete-pickup/:requestId" element={<CompletePickup />} />
         <Route path="/waste-prediction" element={<WastePrediction />} />
-        <Route path="/classify" element={<ScrapClassifier />} />
         <Route path="/price-graph" element={<PriceGraph />} />
       </Routes>
     </Router>
