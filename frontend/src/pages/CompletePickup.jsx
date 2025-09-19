@@ -7,8 +7,17 @@ function CompletePickup() {
   const { requestId } = useParams(); // pickup request id passed via route
   const [request, setRequest] = useState(null);
   const [weight, setWeight] = useState("");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(0);
   const navigate = useNavigate();
+
+  // ✅ Base prices per waste type (example rates, you can change them)
+  const BASE_PRICES = {
+    "Plastic": 20,  // ₹20 per kg
+    "E-Waste": 50,  // ₹50 per kg
+    "Metal": 40,    // ₹40 per kg
+    "Paper": 10,    // ₹10 per kg
+    "Glass": 15     // ₹15 per kg
+  };
 
   useEffect(() => {
     const fetchRequest = async () => {
@@ -29,11 +38,19 @@ function CompletePickup() {
     fetchRequest();
   }, [requestId, navigate]);
 
+  // ✅ Auto-calculate amount when weight changes
+  useEffect(() => {
+    if (request && weight) {
+      const basePrice = BASE_PRICES[request.scrapType] || 10; // fallback ₹10/kg
+      setAmount((parseFloat(weight) * basePrice).toFixed(2));
+    }
+  }, [weight, request]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!weight || !amount) {
-      alert("Please enter both weight and amount");
+    if (!weight) {
+      alert("Please enter weight");
       return;
     }
 
@@ -42,7 +59,7 @@ function CompletePickup() {
       await updateDoc(requestRef, {
         weight: parseFloat(weight),
         amount: parseFloat(amount),
-        status: "completed", // ✅ ensure only completed counts for stats
+        status: "completed", // ✅ only completed counts for stats
       });
 
       alert("Pickup completed successfully!");
@@ -77,17 +94,18 @@ function CompletePickup() {
               step="0.1"
             />
           </div>
+
+          {/* ✅ Auto-calculated amount shown here */}
           <div className="mb-3">
-            <label className="form-label">Amount (₹)</label>
+            <label className="form-label">Calculated Amount (₹)</label>
             <input
-              type="number"
+              type="text"
               className="form-control"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              required
-              min="0"
+              disabled
             />
           </div>
+
           <button type="submit" className="btn btn-success w-100">
             Complete Pickup
           </button>
