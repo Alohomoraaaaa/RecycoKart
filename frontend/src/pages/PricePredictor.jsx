@@ -1,3 +1,4 @@
+//PricePredictor.jsx
 import React, { useState } from "react";
 
 export default function PricePredictor() {
@@ -7,7 +8,7 @@ export default function PricePredictor() {
   const [error, setError] = useState(null);
 
   // Waste types (should match your model)
-  const wasteTypes = ["Plastic", "Organic", "E-Waste", "Construction", "Hazardous"];
+  const wasteTypes = ["Plastic", "Paper", "Metal", "E-Waste", "Glass", "Other"];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -72,7 +73,6 @@ export default function PricePredictor() {
       {/* Show result */}
       {result && (
         <div style={{ marginTop: "2rem", padding: "1rem", border: "1px solid #ccc" }}>
-          <h3>Prediction Result:</h3>
           {result.error ? (
             <p style={{ color: "red" }}>{result.error}</p>
           ) : (

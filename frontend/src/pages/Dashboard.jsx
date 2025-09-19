@@ -191,7 +191,7 @@ function Dashboard() {
   };
 
   const handleBookPickup = () => navigate("/pickup");
-  const handleViewPrices = () => navigate("/price-graph");
+  const handleViewPrices = () => navigate("/prices");
 
   if (authLoading) return <p className="text-center mt-5">Loading...</p>;
   if (loading) return <p className="text-center mt-5">Loading...</p>;
