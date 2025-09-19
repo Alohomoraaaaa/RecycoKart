@@ -27,7 +27,7 @@ function Dashboard() {
   const [recentActivity, setRecentActivity] = useState([]);
   const [myBookings, setMyBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [authLoading, setAuthLoading] = useState(true); // <-- New
+  const [authLoading, setAuthLoading] = useState(true);
 
   // edit profile states
   const [editing, setEditing] = useState(false);
@@ -36,6 +36,8 @@ function Dashboard() {
     email: "",
     contact: "",
     address: "",
+    availability: { start: "", end: "" },
+    scrapTypes: [],
   });
 
   useEffect(() => {
@@ -48,58 +50,27 @@ function Dashboard() {
         }
 
         try {
-          // Fetch Profile
+          // Fetch Profile from users
           const profileRef = doc(db, "users", user.uid);
           const profileSnap = await getDoc(profileRef);
+
           if (profileSnap.exists()) {
-            setProfile(profileSnap.data());
-            setEditForm(profileSnap.data());
+            const userData = profileSnap.data();
 
-            const data = profileSnap.data();
+            if (userData.role === "collector") {
+              // ✅ fetch extra collector details
+              const collectorRef = doc(db, "collectors", user.uid);
+              const collectorSnap = await getDoc(collectorRef);
 
-            if (data.role === "user") {
-              // --- Real-time listener for user pickups ---
-              const requestsRef = collection(db, "pickupRequests");
-              const q = query(requestsRef, where("userId", "==", user.uid));
+              if (collectorSnap.exists()) {
+                const collectorData = collectorSnap.data();
+                setProfile({ ...userData, ...collectorData });
+                setEditForm({ ...userData, ...collectorData });
+              } else {
+                setProfile(userData);
+                setEditForm(userData);
+              }
 
-              const unsubscribeSnapshot = onSnapshot(q, async (snapshot) => {
-                const activities = [];
-                snapshot.forEach((doc) => {
-                  const requestData = doc.data();
-                  activities.push({ id: doc.id, ...requestData });
-                });
-
-                // ✅ Only count completed requests
-                let completed = activities.filter(r => r.status === "completed");
-
-                let totalOrders = completed.length;
-                let totalEarnings = completed.reduce(
-                  (sum, r) => sum + (r.amount || 0),
-                  0
-                );
-                let recyclables = completed.reduce(
-                  (sum, r) => sum + (Number(r.weight) || 0),
-                  0
-                );
-
-                setStats({ totalOrders, totalEarnings, recyclables });
-                setRecentActivity(activities.slice(-5).reverse()); // last 5 requests
-                // ✅ Update the user's document in Firestore
-                try {
-                  const userRef = doc(db, "users", user.uid);
-                  await updateDoc(userRef, {
-                    totalOrders,
-                    totalEarnings,
-                    recyclables
-                  });
-                } catch (err) {
-                  console.error("Error updating stats:", err);
-                }
-              });
-              setLoading(false);
-              setAuthLoading(false);
-              return () => unsubscribeSnapshot();
-            } else if (data.role === "collector") {
               // Fetch Collector Bookings
               const bookingsRef = collection(db, "pickupRequests");
               const q = query(
@@ -114,6 +85,59 @@ function Dashboard() {
                 bookings.push({ id: doc.id, ...doc.data() });
               });
               setMyBookings(bookings);
+            } else {
+              // normal user
+              setProfile(userData);
+              setEditForm(userData);
+
+              // --- Real-time listener for user pickups ---
+              const requestsRef = collection(db, "pickupRequests");
+              const q = query(requestsRef, where("userId", "==", user.uid));
+
+              const unsubscribeSnapshot = onSnapshot(q, async (snapshot) => {
+                const activities = [];
+                snapshot.forEach((doc) => {
+                  const requestData = doc.data();
+                  activities.push({ id: doc.id, ...requestData });
+                });
+
+                let completed = activities.filter(
+                  (r) => r.status === "completed"
+                );
+
+                let totalOrders = completed.length;
+                let totalEarnings = completed.reduce(
+                  (sum, r) => sum + (r.amount || 0),
+                  0
+                );
+                let recyclables = completed.reduce((sum, r) => {
+                  if (Array.isArray(r.scraps)) {
+                    const totalWeight = r.scraps.reduce(
+                      (subSum, s) => subSum + (Number(s.weight) || 0),
+                      0
+                    );
+                    return sum + totalWeight;
+                  } else if (r.weight) {
+                    return sum + Number(r.weight);
+                  }
+                  return sum;
+                }, 0);
+
+                setStats({ totalOrders, totalEarnings, recyclables });
+                setRecentActivity(activities.slice(-5).reverse());
+
+                try {
+                  const userRef = doc(db, "users", user.uid);
+                  await updateDoc(userRef, {
+                    totalOrders,
+                    totalEarnings,
+                    recyclables,
+                  });
+                } catch (err) {
+                  console.error("Error updating stats:", err);
+                }
+              });
+              return () => unsubscribeSnapshot();
             }
           }
         } catch (error) {
@@ -138,8 +162,24 @@ function Dashboard() {
   const handleSaveProfile = async () => {
     try {
       const user = auth.currentUser;
+
+      // update users collection
       const profileRef = doc(db, "users", user.uid);
       await updateDoc(profileRef, editForm);
+
+      // if collector, also update collectors collection
+      if (profile.role === "collector") {
+        const collectorRef = doc(db, "collectors", user.uid);
+        await updateDoc(collectorRef, {
+          availability: {
+            start: editForm.availability?.start || "",
+            end: editForm.availability?.end || "",
+          },
+          scrapTypes: editForm.scrapTypes,
+          address: editForm.address,
+          contact: editForm.contact,
+        });
+      }
 
       setProfile(editForm);
       setEditing(false);
@@ -151,7 +191,7 @@ function Dashboard() {
   };
 
   const handleBookPickup = () => navigate("/pickup");
-  const handleViewPrices = () => navigate("/prices");
+  const handleViewPrices = () => navigate("/price-graph");
 
   if (authLoading) return <p className="text-center mt-5">Loading...</p>;
   if (loading) return <p className="text-center mt-5">Loading...</p>;
@@ -208,7 +248,6 @@ function Dashboard() {
                   <strong>Role:</strong> {profile.role}
                 </p>
 
-                {/* ✅ Edit + Logout side by side */}
                 <div className="d-flex gap-2">
                   <button
                     className="btn btn-warning w-50"
@@ -216,10 +255,7 @@ function Dashboard() {
                   >
                     Edit Profile
                   </button>
-                  <button
-                    className="btn btn-danger w-50"
-                    onClick={handleLogout}
-                  >
+                  <button className="btn btn-danger w-50" onClick={handleLogout}>
                     Logout
                   </button>
                 </div>
@@ -278,10 +314,7 @@ function Dashboard() {
                 </div>
               </div>
               <div className="mt-3 d-flex gap-2">
-                <button
-                  className="btn btn-success"
-                  onClick={handleSaveProfile}
-                >
+                <button className="btn btn-success" onClick={handleSaveProfile}>
                   Save
                 </button>
                 <button
@@ -306,13 +339,23 @@ function Dashboard() {
                     <div key={index} className="col-md-6 mb-3">
                       <div className="card p-3 shadow-sm h-100">
                         <h6 className="text-success mb-2">
-                          {activity.scrapType} Pickup
+                          {activity.scrapTypes
+                            ? activity.scrapTypes.join(", ")
+                            : activity.scrapType}{" "}
+                          Pickup
                         </h6>
                         <p className="mb-1">
                           <strong>Date:</strong> {activity.date}
                         </p>
                         <p className="mb-1">
-                          <strong>Weight:</strong> {activity.weight} kg
+                          <strong>Total Weight:</strong>{" "}
+                          {Array.isArray(activity.scraps)
+                            ? activity.scraps.reduce(
+                                (sum, s) => sum + (Number(s.weight) || 0),
+                                0
+                              )
+                            : activity.weight || 0}{" "}
+                          kg
                         </p>
                         <p className="mb-1">
                           <strong>Status:</strong>{" "}
@@ -328,11 +371,11 @@ function Dashboard() {
                         </p>
                         {activity.collectorName && (
                           <p className="mb-1">
-                            <strong>Collector:</strong> {activity.collectorName}
+                            <strong>Collector:</strong>{" "}
+                            {activity.collectorName}
                           </p>
                         )}
 
-                        {/* ✅ Button only if completed */}
                         {activity.status === "completed" && (
                           <button
                             className="btn btn-outline-success btn-sm mt-2"
@@ -371,10 +414,22 @@ function Dashboard() {
               <strong>Locality:</strong> {profile.address}
             </p>
             <p>
+              <strong>Availability Time:</strong>{" "}
+              {profile.availability
+                ? `${profile.availability.start} - ${profile.availability.end}`
+                : "Not set"}
+            </p>
+            <p>
+              <strong>Scrap Types Collected:</strong>{" "}
+              {Array.isArray(profile.scrapTypes) &&
+              profile.scrapTypes.length > 0
+                ? profile.scrapTypes.join(", ")
+                : "Not specified"}
+            </p>
+            <p>
               <strong>Role:</strong> {profile.role}
             </p>
 
-            {/* ✅ Edit + Logout side by side */}
             <div className="d-flex gap-2 mt-3">
               <button
                 className="btn btn-warning w-50"
@@ -382,10 +437,7 @@ function Dashboard() {
               >
                 Edit Profile
               </button>
-              <button
-                className="btn btn-danger w-50"
-                onClick={handleLogout}
-              >
+              <button className="btn btn-danger w-50" onClick={handleLogout}>
                 Logout
               </button>
             </div>
@@ -436,12 +488,63 @@ function Dashboard() {
                     }
                   />
                 </div>
+                <div className="col-md-6">
+                  <label className="form-label">Availability Start</label>
+                  <input
+                    type="time"
+                    className="form-control"
+                    value={editForm.availability?.start || ""}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        availability: {
+                          ...editForm.availability,
+                          start: e.target.value,
+                        },
+                      })
+                    }
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Availability End</label>
+                  <input
+                    type="time"
+                    className="form-control"
+                    value={editForm.availability?.end || ""}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        availability: {
+                          ...editForm.availability,
+                          end: e.target.value,
+                        },
+                      })
+                    }
+                  />
+                </div>
+                <div className="col-md-6">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Scrap Types (comma separated)"
+                    value={
+                      Array.isArray(editForm.scrapTypes)
+                        ? editForm.scrapTypes.join(", ")
+                        : ""
+                    }
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        scrapTypes: e.target.value
+                          .split(",")
+                          .map((s) => s.trim()),
+                      })
+                    }
+                  />
+                </div>
               </div>
               <div className="mt-3 d-flex gap-2">
-                <button
-                  className="btn btn-success"
-                  onClick={handleSaveProfile}
-                >
+                <button className="btn btn-success" onClick={handleSaveProfile}>
                   Save
                 </button>
                 <button
@@ -477,13 +580,17 @@ function Dashboard() {
                     className="d-flex justify-content-between align-items-center"
                   >
                     <span>
-                      {booking.scrapType} - {booking.date}
+                      {booking.scrapTypes
+                        ? booking.scrapTypes.join(", ")
+                        : booking.scrapType}{" "}
+                      - {booking.date}
                       {booking.status === "completed" && (
-                        <span className="badge bg-success ms-2">Completed</span>
+                        <span className="badge bg-success ms-2">
+                          Completed
+                        </span>
                       )}
                     </span>
 
-                    {/* ✅ Show Complete Pickup button only if accepted */}
                     {booking.status === "accepted" && (
                       <button
                         className="btn btn-primary btn-sm"

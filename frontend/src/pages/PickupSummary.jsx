@@ -7,36 +7,26 @@ function PickupSummary() {
   const location = useLocation();
   const { requestData } = location.state; // passed from collector after payment
 
-  const [predictedPrice, setPredictedPrice] = useState(0);
-  const [impact, setImpact] = useState(null); // Initialize as null
+  const [impact, setImpact] = useState(null); // Environmental impact
   const [collectorAddress, setCollectorAddress] = useState("");
 
   useEffect(() => {
-    // Fetch predicted price
-    fetch("http://127.0.0.1:5000/predict_price", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        scrap_type: requestData.scrapType,
-        weight: requestData.weight,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => setPredictedPrice(data.predicted_price));
+    // Prepare scraps array to send to Flask
+    const scrapsList = requestData.scraps && requestData.scraps.length > 0
+      ? requestData.scraps
+      : [{ scrap_type: requestData.scrapType, weight: requestData.weight }];
 
-    // Fetch environmental impact for this single transaction
+    // Fetch environmental impact
     fetch("http://127.0.0.1:5000/environmental_impact", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        scrap_type: requestData.scrapType,
-        weight: requestData.weight,
-      }),
+      body: JSON.stringify({ scraps: scrapsList }),
     })
-      .then((res) => res.json())
-      .then((data) => setImpact(data));
+      .then(res => res.json())
+      .then(data => setImpact(data))
+      .catch(err => console.error("Error fetching impact:", err));
 
-    // Fetch collector's address from users collection
+    // Fetch collector's address from Firestore
     const fetchCollectorAddress = async () => {
       try {
         const collectorRef = doc(db, "users", requestData.collectorId);
@@ -56,47 +46,35 @@ function PickupSummary() {
     <div className="container my-5">
       <h2 className="text-success mb-4">Pickup Summary</h2>
       <div className="card shadow-sm p-4">
-        <p>
-          <strong>Scrap Type:</strong> {requestData.scrapType}
-        </p>
-        <p>
-          <strong>Weight:</strong> {requestData.weight} kg
-        </p>
-        <p>
-          <strong>Pickup Date:</strong> {requestData.date}
-        </p>
-        <p>
-          <strong>Pickup Time:</strong> {requestData.time}
-        </p>
+        <p><strong>Pickup Date:</strong> {requestData.date}</p>
+        <p><strong>Pickup Time:</strong> {requestData.time}</p>
+
+        <h5 className="mt-3">Scrap Details</h5>
+        {requestData.scraps && requestData.scraps.length > 0 ? (
+          <ul>
+            {requestData.scraps.map((item, index) => (
+              <li key={index}>
+                {item.scrap_type} - {item.weight} kg
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>{requestData.scrapType} - {requestData.weight} kg</p>
+        )}
 
         <h5 className="mt-3">Collector Details</h5>
-        <p>
-          <strong>Name:</strong> {requestData.collectorName}
-        </p>
-        <p>
-          <strong>Locality:</strong> {collectorAddress}
-        </p>
+        <p><strong>Name:</strong> {requestData.collectorName}</p>
+        <p><strong>Locality:</strong> {collectorAddress}</p>
 
         <h5 className="mt-3">Amount Paid</h5>
-        <p>
-          <strong>Amount Paid:</strong> ₹ {requestData.amount}
-        </p>
-
-        <h5 className="mt-3">Predicted Price</h5>
-        <p>₹ {predictedPrice}</p>
+        <p><strong>Amount Paid:</strong> ₹ {requestData.amount}</p>
 
         {impact && (
           <div>
-            <h5 className="mt-3">🌱 Environmental Impact</h5>
-            <p>
-              CO₂ Saved: {impact.co2_saved} kg
-            </p>
-            <p>
-              Water Conserved: {impact.water_conserved} L
-            </p>
-            <p>
-              Landfill Diverted: {impact.landfill_diverted} kg
-            </p>
+            <h5 className="mt-3">🌱 Environmental Impact (Total)</h5>
+            <p>CO₂ Saved: {impact.co2_saved} kg</p>
+            <p>Water Conserved: {impact.water_conserved} L</p>
+            <p>Landfill Diverted: {impact.landfill_diverted} kg</p>
           </div>
         )}
       </div>

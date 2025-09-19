@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { db, auth } from "../firebase";
-import { collection, query, where, getDocs, updateDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  updateDoc,
+  doc,
+} from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -51,7 +58,9 @@ function CollectorRequests() {
 
   const handleAccept = async (requestId) => {
     try {
-      await updateDoc(doc(db, "pickupRequests", requestId), { status: "accepted" });
+      await updateDoc(doc(db, "pickupRequests", requestId), {
+        status: "accepted",
+      });
       setRequests((prev) => prev.filter((req) => req.id !== requestId));
       alert("Request Accepted!");
     } catch (err) {
@@ -62,7 +71,9 @@ function CollectorRequests() {
 
   const handleReject = async (requestId) => {
     try {
-      await updateDoc(doc(db, "pickupRequests", requestId), { status: "rejected" });
+      await updateDoc(doc(db, "pickupRequests", requestId), {
+        status: "rejected",
+      });
       setRequests((prev) => prev.filter((req) => req.id !== requestId));
       alert("Request Rejected");
     } catch (err) {
@@ -81,12 +92,16 @@ function CollectorRequests() {
       ) : (
         <div className="list-group">
           {requests.map((req) => (
-            <div key={req.id} className="list-group-item mb-2">
-              <h5>{req.scrapType} Pickup</h5>
+            <div key={req.id} className="list-group-item mb-3 shadow-sm p-3 rounded">
+              <h5 className="mb-2 text-primary">
+                {req.scrapTypes ? req.scrapTypes.join(", ") : req.scrapType} Pickup
+              </h5>
               <p><strong>Date:</strong> {req.date}</p>
               <p><strong>Time:</strong> {req.time}</p>
-              <p><strong>User Address:</strong> {req.pickupAddress}</p>
-              <div>
+              <p><strong>User:</strong> {req.userName || "N/A"}</p>
+              <p><strong>Phone:</strong> {req.userPhone || "N/A"}</p>
+              <p><strong>Pickup Address:</strong> {req.pickupAddress}</p>
+              <div className="mt-3">
                 <button
                   className="btn btn-success me-2"
                   onClick={() => handleAccept(req.id)}
