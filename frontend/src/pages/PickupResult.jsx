@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom"; // 🔹 Added useNavigate
+import { useLocation, useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
 import { auth, db } from "../firebase";
-import { collection, query, where, getDocs, doc, setDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
 
 // Custom icons
 const userIcon = new L.Icon({
@@ -22,29 +22,43 @@ const collectorIcon = new L.Icon({
   popupAnchor: [0, -32],
 });
 
-// Haversine distance function
+// Haversine distance
 const getDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371; // km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLat / 2) ** 2 +
     Math.cos((lat1 * Math.PI) / 180) *
       Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+      Math.sin(dLon / 2) ** 2;
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 };
 
 function PickupResult() {
   const location = useLocation();
-  const navigate = useNavigate(); // 🔹 Added navigate
-  const { scrapType, time, userLat, userLng, address, date, pickupAddress } = location.state;
+  const navigate = useNavigate();
+  const { scrapTypes, time, userLat, userLng, address, date, pickupAddress } = location.state;
 
   const [collectors, setCollectors] = useState([]);
-  const [selectedCollector, setSelectedCollector] = useState(null);
+  const [selectedCollectors, setSelectedCollectors] = useState([]);
+  const [userData, setUserData] = useState({}); // ✅ store user details
 
+  // Fetch current user details (name, phone)
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          setUserData(userDoc.data());
+        }
+      }
+    };
+    fetchUserDetails();
+  }, []);
+
+  // Fetch collectors
   useEffect(() => {
     const fetchCollectors = async () => {
       try {
@@ -52,14 +66,19 @@ function PickupResult() {
         const q = query(usersRef, where("role", "==", "collector"));
         const querySnapshot = await getDocs(q);
 
+        const collectorSnap = await getDocs(collection(db, "collectors"));
+
         const matchedCollectors = [];
 
         for (const userDoc of querySnapshot.docs) {
-          const collectorSnap = await getDocs(collection(db, "collectors"));
-          const collectorData = collectorSnap.docs.find(d => d.id === userDoc.id)?.data();
+          const collectorData = collectorSnap.docs.find((d) => d.id === userDoc.id)?.data();
 
           if (collectorData) {
-            const hasScrap = collectorData.scrapTypes?.includes(scrapType);
+            const matchingScrapTypes = collectorData.scrapTypes?.filter((type) =>
+              scrapTypes.includes(type)
+            );
+
+            const hasScrap = matchingScrapTypes.length > 0;
             const start = collectorData.availability?.start;
             const end = collectorData.availability?.end;
             const matchesTime = time >= start && time <= end;
@@ -74,6 +93,7 @@ function PickupResult() {
                   lat: collectorData.lat,
                   lng: collectorData.lng,
                   distance,
+                  matchingScrapTypes,
                 });
               }
             }
@@ -88,10 +108,16 @@ function PickupResult() {
     };
 
     fetchCollectors();
-  }, [scrapType, time, userLat, userLng]);
+  }, [scrapTypes, time, userLat, userLng]);
+
+  const toggleCollector = (col) => {
+    setSelectedCollectors((prev) =>
+      prev.find((c) => c.id === col.id) ? prev.filter((c) => c.id !== col.id) : [...prev, col]
+    );
+  };
 
   const handleRequest = async () => {
-    if (!selectedCollector) return alert("Please select a collector!");
+    if (selectedCollectors.length === 0) return alert("Please select at least one collector!");
 
     const user = auth.currentUser;
     if (!user) {
@@ -99,66 +125,111 @@ function PickupResult() {
       return;
     }
 
-    const requestRef = doc(db, "pickupRequests", `${Date.now()}`);
-    await setDoc(requestRef, {
-      userId: user.uid,
-      collectorId: selectedCollector.id,
-      collectorName: selectedCollector.name,
-      scrapType,
-      date,
-      time,
-      status: "pending",
-      userLat,
-      userLng,
-      pickupAddress,
-      address,
-    });
+    for (const col of selectedCollectors) {
+      const requestRef = doc(db, "pickupRequests", `${Date.now()}_${col.id}`);
+      await setDoc(requestRef, {
+        userId: user.uid,
+        userName: userData.name || "",
+        userPhone: userData.contact || "",
+        collectorId: col.id,
+        collectorName: col.name,
+        scrapTypes: col.matchingScrapTypes,
+        date,
+        time,
+        status: "pending",
+        userLat,
+        userLng,
+        pickupAddress,
+        address,
+      });
+    }
 
-    // 🔹 Navigate to dashboard after successful request
     navigate("/dashboard");
   };
 
   return (
     <div className="container my-5">
-      <h2 className="text-center text-success mb-4">Select A Collector</h2>
+      <h2 className="text-center text-success mb-4">Choose Your Collectors</h2>
 
-      <div style={{ height: "400px", marginBottom: "20px" }}>
-        <MapContainer center={[userLat, userLng]} zoom={12} style={{ height: "100%", width: "100%" }}>
-          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-
-          <Marker position={[userLat, userLng]} icon={userIcon}>
-            <Popup>Your Location</Popup>
-          </Marker>
-
-          {collectors.map((col) => (
-            <Marker
-              key={col.id}
-              position={[col.lat, col.lng]}
-              icon={collectorIcon}
-              eventHandlers={{ click: () => setSelectedCollector(col) }}
+      <div className="row">
+        {/* Map Section */}
+        <div className="col-md-6 mb-4">
+          <div className="shadow rounded" style={{ height: "420px", overflow: "hidden" }}>
+            <MapContainer
+              center={[userLat, userLng]}
+              zoom={12}
+              style={{ height: "100%", width: "100%" }}
             >
-              <Popup>{col.name} <br /> {col.distance.toFixed(2)} km away</Popup>
-            </Marker>
-          ))}
-        </MapContainer>
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+
+              <Marker position={[userLat, userLng]} icon={userIcon}>
+                <Popup>Your Location</Popup>
+              </Marker>
+
+              {collectors.map((col) => (
+                <Marker
+                  key={col.id}
+                  position={[col.lat, col.lng]}
+                  icon={collectorIcon}
+                  eventHandlers={{ click: () => toggleCollector(col) }}
+                >
+                  <Popup>
+                    <strong>{col.name}</strong> <br />
+                    {col.distance.toFixed(2)} km away <br />
+                    <b>
+                      {selectedCollectors.find((c) => c.id === col.id)
+                        ? "✅ Selected"
+                        : "Click to Select"}
+                    </b>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+          </div>
+        </div>
+
+        {/* Collectors Section */}
+        <div className="col-md-6">
+          <h4 className="mb-3">Available Collectors (within 10 km)</h4>
+          <div className="d-flex flex-column gap-3">
+            {collectors.map((col) => {
+              const isSelected = selectedCollectors.find((c) => c.id === col.id);
+              return (
+                <div
+                  key={col.id}
+                  className={`card shadow-sm ${isSelected ? "border-success" : ""}`}
+                  style={{ cursor: "pointer", transition: "0.3s" }}
+                  onClick={() => toggleCollector(col)}
+                >
+                  <div className="card-body">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <h5 className="card-title mb-0">
+                        {col.name}{" "}
+                        {isSelected && (
+                          <span className="badge bg-success ms-2">Selected</span>
+                        )}
+                      </h5>
+                      <span className="text-muted small">
+                        {col.distance.toFixed(2)} km away
+                      </span>
+                    </div>
+                    <div className="mt-2">
+                      {col.matchingScrapTypes.map((type, idx) => (
+                        <span key={idx} className="badge bg-secondary me-1">
+                          {type}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
-      <h4>Nearest Collectors (within 10 km)</h4>
-      <ul className="list-group mb-3">
-        {collectors.map((col) => (
-          <li
-            key={col.id}
-            className={`list-group-item ${selectedCollector?.id === col.id ? "active" : ""}`}
-            onClick={() => setSelectedCollector(col)}
-            style={{ cursor: "pointer" }}
-          >
-            {col.name} — {col.distance.toFixed(2)} km away
-          </li>
-        ))}
-      </ul>
-
-      <button className="btn btn-success w-100" onClick={handleRequest}>
-        Send Pickup Request
+      <button className="btn btn-lg btn-success w-100 mt-4" onClick={handleRequest}>
+        Send Pickup Request(s)
       </button>
     </div>
   );

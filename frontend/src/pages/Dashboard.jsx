@@ -306,7 +306,7 @@ function Dashboard() {
                     <div key={index} className="col-md-6 mb-3">
                       <div className="card p-3 shadow-sm h-100">
                         <h6 className="text-success mb-2">
-                          {activity.scrapType} Pickup
+                          {activity.scrapTypes ? activity.scrapTypes.join(", ") : activity.scrapType} Pickup
                         </h6>
                         <p className="mb-1">
                           <strong>Date:</strong> {activity.date}
@@ -477,7 +477,7 @@ function Dashboard() {
                     className="d-flex justify-content-between align-items-center"
                   >
                     <span>
-                      {booking.scrapType} - {booking.date}
+                      {booking.scrapTypes ? booking.scrapTypes.join(", ") : booking.scrapType} - {booking.date}
                       {booking.status === "completed" && (
                         <span className="badge bg-success ms-2">Completed</span>
                       )}

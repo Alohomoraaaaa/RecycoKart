@@ -4,16 +4,15 @@ import { auth, db } from "../firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 function Pickup() {
-  const [scrapType, setScrapType] = useState("");
+  const [scrapTypes, setScrapTypes] = useState([]); // ✅ store multiple selections
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [error, setError] = useState("");
-  const [address, setAddress] = useState(""); // store user's locality (address in DB)
+  const [address, setAddress] = useState(""); 
   const [pickupAddress, setPickupAddress] = useState("");
 
   const navigate = useNavigate();
 
-  // ✅ Fetch logged-in user's address/locality from Firestore
   useEffect(() => {
     const fetchUserAddress = async () => {
       const user = auth.currentUser;
@@ -26,11 +25,22 @@ function Pickup() {
     fetchUserAddress();
   }, []);
 
+  // ✅ Handle checkbox change
+  const handleCheckboxChange = (type) => {
+    if (scrapTypes.includes(type)) {
+      // remove if already selected
+      setScrapTypes(scrapTypes.filter((item) => item !== type));
+    } else {
+      // add if newly selected
+      setScrapTypes([...scrapTypes, type]);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!scrapType) {
-      setError("Please select a recyclable type");
+    if (scrapTypes.length === 0) {
+      setError("Please select at least one recyclable type");
       return;
     }
     if (!date) {
@@ -64,13 +74,9 @@ function Pickup() {
     try {
       const user = auth.currentUser;
       if (user) {
-        // ✅ Save locality into Firestore under "address"
-        await updateDoc(doc(db, "users", user.uid), {
-          address: address,
-        });
+        await updateDoc(doc(db, "users", user.uid), { address });
       }
 
-      // ✅ Convert text-based locality → lat/lng using OpenStreetMap API
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
           address
@@ -78,22 +84,20 @@ function Pickup() {
       );
       const data = await response.json();
       if (!data.length) {
-        setError(
-          "❌ Could not fetch location coordinates for the entered locality."
-        );
+        setError("❌ Could not fetch location coordinates for the entered locality.");
         return;
       }
       const { lat, lon } = data[0];
 
-      // ✅ Navigate to PickupResult without weight
+      // ✅ Pass array of scrap types
       navigate("/pickupresult", {
         state: {
-          scrapType,
+          scrapTypes, // array
           date,
           time,
           userLat: parseFloat(lat),
           userLng: parseFloat(lon),
-          address, // from state
+          address,
           pickupAddress,
         },
       });
@@ -111,22 +115,26 @@ function Pickup() {
           <div className="card shadow-sm p-4">
             {error && <div className="alert alert-danger">{error}</div>}
             <form onSubmit={handleSubmit}>
-              {/* Recyclable Type */}
+              
+              {/* ✅ Recyclable Type (multiple checkboxes) */}
               <div className="mb-3">
                 <label className="form-label">Recyclable Type</label>
-                <select
-                  className="form-select"
-                  value={scrapType}
-                  onChange={(e) => setScrapType(e.target.value)}
-                >
-                  <option value="">-- Select Type --</option>
-                  <option value="Plastic">Plastic</option>
-                  <option value="Paper">Paper</option>
-                  <option value="Metal">Metal</option>
-                  <option value="E-Waste">E-Waste</option>
-                  <option value="Glass">Glass</option>
-                  <option value="Other">Other</option>
-                </select>
+                <div>
+                  {["Plastic", "Paper", "Metal", "E-Waste", "Glass", "Other"].map((type) => (
+                    <div key={type} className="form-check">
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        id={type}
+                        checked={scrapTypes.includes(type)}
+                        onChange={() => handleCheckboxChange(type)}
+                      />
+                      <label className="form-check-label" htmlFor={type}>
+                        {type}
+                      </label>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Pickup Date */}
