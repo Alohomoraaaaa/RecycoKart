@@ -1,4 +1,6 @@
 import React from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
@@ -13,6 +15,7 @@ import PickupSummary from "./pages/PickupSummary";
 import LeaderBoard from "./pages/LeaderBoard";
 import CompletePickup from "./pages/CompletePickup";
 import WastePrediction from "./pages/WastePrediction";
+import ScrapClassifier from "./pages/ScrapClassifier";
 
 function App() {
   return (
@@ -32,6 +35,7 @@ function App() {
         <Route path="/leaderboard" element={<LeaderBoard />} />
         <Route path="/complete-pickup/:requestId" element={<CompletePickup />} />
         <Route path="/waste-prediction" element={<WastePrediction />} />
+        <Route path="/classify" element={<ScrapClassifier />} />
       </Routes>
     </Router>
   );

@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { auth } from "../firebase"; // your firebase setup
+import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
-
-// 🔹 CHANGE: import Firestore to fetch user role
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase"; // 🔹 CHANGE: Firestore instance
+import { db } from "../firebase";
+
+// ✅ Make sure you have this import in your index.js or App.js
+// import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 function Navbar() {
   const [user, setUser] = useState(null);
-  const [role, setRole] = useState(null); // 🔹 CHANGE: track role ("user" / "collector")
+  const [role, setRole] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,16 +18,16 @@ function Navbar() {
       if (currentUser) {
         setUser(currentUser);
 
-        // 🔹 CHANGE: fetch role from Firestore
         const userDoc = await getDoc(doc(db, "users", currentUser.uid));
         if (userDoc.exists()) {
-          setRole(userDoc.data().role); // "user" or "collector"
+          setRole(userDoc.data().role);
         }
       } else {
         setUser(null);
-        setRole(null); // 🔹 CHANGE: reset role on logout
+        setRole(null);
       }
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -38,22 +39,25 @@ function Navbar() {
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-success">
       <div className="container">
-        {/* Brand / Logo */}
+        {/* Brand */}
         <Link className="navbar-brand fw-bold" to="/">
           ♻️ RecycoKart
         </Link>
 
-        {/* Toggle for mobile */}
+        {/* Mobile Toggle */}
         <button
           className="navbar-toggler"
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
         >
           <span className="navbar-toggler-icon"></span>
         </button>
 
-        {/* Links */}
+        {/* Navbar Links */}
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
             <li className="nav-item">
@@ -62,7 +66,6 @@ function Navbar() {
               </Link>
             </li>
 
-            {/* 🔹 CHANGE: Guest menu */}
             {!user ? (
               <>
                 <li className="nav-item">
@@ -78,7 +81,6 @@ function Navbar() {
               </>
             ) : role === "user" ? (
               <>
-                {/* 🔹 CHANGE: User menu */}
                 <li className="nav-item">
                   <Link className="nav-link" to="/dashboard">
                     Dashboard
@@ -109,7 +111,6 @@ function Navbar() {
               </>
             ) : role === "collector" ? (
               <>
-                {/* 🔹 CHANGE: Collector menu */}
                 <li className="nav-item">
                   <Link className="nav-link" to="/dashboard">
                     Dashboard
