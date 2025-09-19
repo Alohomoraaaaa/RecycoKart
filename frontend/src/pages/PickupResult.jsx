@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom"; // 🔹 Added useNavigate
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -22,9 +22,9 @@ const collectorIcon = new L.Icon({
   popupAnchor: [0, -32],
 });
 
-// Function to calculate distance between two lat/lng (Haversine formula)
+// Haversine distance function
 const getDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371; // Earth radius in km
+  const R = 6371; // km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
@@ -34,12 +34,12 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; // distance in km
+  return R * c;
 };
 
 function PickupResult() {
   const location = useLocation();
-  // ✅ Removed weight
+  const navigate = useNavigate(); // 🔹 Added navigate
   const { scrapType, time, userLat, userLng, address, date, pickupAddress } = location.state;
 
   const [collectors, setCollectors] = useState([]);
@@ -67,7 +67,6 @@ function PickupResult() {
             if (hasScrap && matchesTime) {
               const distance = getDistance(userLat, userLng, collectorData.lat, collectorData.lng);
 
-              // ✅ Radius filter (e.g., 10 km)
               if (distance <= 10) {
                 matchedCollectors.push({
                   id: userDoc.id,
@@ -81,12 +80,8 @@ function PickupResult() {
           }
         }
 
-        // Sort collectors by distance (nearest first)
         matchedCollectors.sort((a, b) => a.distance - b.distance);
-
-        console.log("Matched Collectors:", matchedCollectors);
         setCollectors(matchedCollectors);
-
       } catch (err) {
         console.error("Error fetching collectors:", err);
       }
@@ -119,7 +114,8 @@ function PickupResult() {
       address,
     });
 
-    alert(`Request sent to ${selectedCollector.name}!`);
+    // 🔹 Navigate to dashboard after successful request
+    navigate("/dashboard");
   };
 
   return (
@@ -130,12 +126,10 @@ function PickupResult() {
         <MapContainer center={[userLat, userLng]} zoom={12} style={{ height: "100%", width: "100%" }}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-          {/* User marker in blue */}
           <Marker position={[userLat, userLng]} icon={userIcon}>
             <Popup>Your Location</Popup>
           </Marker>
 
-          {/* Collectors in red */}
           {collectors.map((col) => (
             <Marker
               key={col.id}
