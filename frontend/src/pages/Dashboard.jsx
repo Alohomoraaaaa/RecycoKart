@@ -99,7 +99,10 @@ function Dashboard() {
                 let completed = activities.filter((r) => r.status === "completed");
 
                 let totalOrders = completed.length;
-                let totalEarnings = completed.reduce((sum, r) => sum + (r.amount || 0), 0);
+                let totalEarnings = completed.reduce(
+                  (sum, r) => sum + (r.amount || 0),
+                  0
+                );
                 let recyclables = completed.reduce((sum, r) => {
                   if (Array.isArray(r.scraps)) {
                     const totalWeight = r.scraps.reduce(
@@ -272,21 +275,22 @@ function Dashboard() {
                 </div>
               </div>
 
-            <div className="col-md-8 mb-3">
-              <div className="card shadow-sm p-3">
-                <h5 className="text-success mb-3">Quick Actions</h5>
-                <div className="d-flex gap-3 flex-wrap">
-                  <button className="btn btn-success" onClick={handleBookPickup}>
-                    Book Pickup
-                  </button>
-                  <button className="btn btn-primary" onClick={handleViewPrices}>
-                    View Prices
-                  </button>
+              <div className="col-md-8 mb-3">
+                <div className="card shadow-sm p-3">
+                  <h5 className="text-success mb-3">Quick Actions</h5>
+                  <div className="d-flex gap-3 flex-wrap">
+                    <button className="btn btn-success" onClick={handleBookPickup}>
+                      Book Pickup
+                    </button>
+                    <button className="btn btn-primary" onClick={handleViewPrices}>
+                      View Prices
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
+            {/* ✅ Edit Profile (User) */}
             {editing && (
               <div className="card shadow-sm p-3 mt-3">
                 <h5 className="text-success mb-3">Edit Profile</h5>
@@ -328,60 +332,6 @@ function Dashboard() {
                       value={editForm.address}
                       onChange={(e) =>
                         setEditForm({ ...editForm, address: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Availability Start</label>
-                    <input
-                      type="time"
-                      className="form-control"
-                      value={editForm.availability?.start || ""}
-                      onChange={(e) =>
-                        setEditForm({
-                          ...editForm,
-                          availability: {
-                            ...editForm.availability,
-                            start: e.target.value,
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Availability End</label>
-                    <input
-                      type="time"
-                      className="form-control"
-                      value={editForm.availability?.end || ""}
-                      onChange={(e) =>
-                        setEditForm({
-                          ...editForm,
-                          availability: {
-                            ...editForm.availability,
-                            end: e.target.value,
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Scrap Types (comma separated)"
-                      value={
-                        Array.isArray(editForm.scrapTypes)
-                          ? editForm.scrapTypes.join(", ")
-                          : ""
-                      }
-                      onChange={(e) =>
-                        setEditForm({
-                          ...editForm,
-                          scrapTypes: e.target.value
-                            .split(",")
-                            .map((s) => s.trim()),
-                        })
                       }
                     />
                   </div>
@@ -511,7 +461,7 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Edit Profile Form */}
+            {/* Edit Profile Form (Collector) */}
             {editing && (
               <div className="card shadow-sm p-3 mb-4">
                 <h5 className="text-success mb-3">Edit Profile</h5>

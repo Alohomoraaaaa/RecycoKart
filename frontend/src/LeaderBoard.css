@@ -1,16 +1,8 @@
-/*
- * LeaderBoard.css
- *
- * This file contains all the styling and animations for the LeaderBoard component.
- * It includes a background with a dynamic gradient and falling nature-themed elements,
- * a centered container, and a styled leaderboard table.
- */
-
-/* 🌱 Root Theme Variables */
+/* Root theme variables */
 :root {
   --primary-green: #2ecc71;
   --dark-green: #145a32;
-  --earth-brown: #8d6e63;
+  --earth-brown: #8d663;
   --sky-blue: #a3e6ff;
   --energy-yellow: #f1c40f;
   --recycling-grey: #7f8c8d;
@@ -18,134 +10,132 @@
   --gradient-main: linear-gradient(135deg, #bfe31d, #afe41d, #98e51d,#7ee61d);
 }
 
-/* 🌿 Background with Gradient + Particles - APPLIED ONLY TO LEADERBOARD PAGE */
+/* Animated gradient background for the leaderboard page */
 .leaderboard-page {
-  background: var(--neutral-bg);
-  background-image: var(--gradient-main);
-  background-size: 400% 400%;
-  animation: gradientShift 20s ease infinite;
-  overflow-x: hidden;
-  position: relative;
+  background: linear-gradient(135deg, #e2ffe5 0%, #f4fdf7 100%);
   min-height: 100vh;
-  /* This setup centers the content horizontally within the page */
   display: flex;
   justify-content: center;
   align-items: flex-start;
+  padding: 3rem 1rem;
+  position: relative;
+  overflow-x: hidden;
 }
 
-/* Flowing Gradient Animation */
+/* Gradient animation */
 @keyframes gradientShift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
-/* 🍂 More Realistic Falling Leaves Animation */
+/* Falling leaves animation container */
 .leaf-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    z-index: 0;
-    pointer-events: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
 }
 
+/* Single leaf styling and animation */
 .leaf-container .leaf {
-    position: absolute;
-    top: 60px;
-    opacity: 0;
-    will-change: transform, opacity;
-    animation: fall linear infinite;
+  position: absolute;
+  top: 60px;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: fall linear infinite;
 }
 
 .leaf-container .leaf::before {
-    content: var(--emoji);
-    font-size: var(--font-size);
+  content: var(--emoji);
+  font-size: var(--font-size);
 }
 
-/* Base animation for all leaves */
+/* Leaf falling keyframes */
 @keyframes fall {
-    0% {
-        transform: translate(var(--x-start), 0) rotate(0deg);
-        opacity: 1;
-    }
-    100% {
-        transform: translate(var(--x-end), 100vh) rotate(360deg);
-        opacity: 0.5;
-    }
+  0% {
+    transform: translate(var(--x-start), 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--x-end), 100vh) rotate(360deg);
+    opacity: 0.5;
+  }
 }
 
-/* 🌟 Leaderboard Container */
+/* Leaderboard container with glassmorphic card style */
 .containerL {
-    /* Significantly increased max-width for a much wider container */
-    max-width: 2000px; 
-    /* Use margin: auto for horizontal centering */
-    margin-left: auto;
-    margin-right: auto;
-    /* This adds the small space below the navbar */
-    margin-top: 1cm;
-    /* Adjusted width to be responsive and not exceed parent */
-    width: 100%;
+  max-width: 1200px; /* Adjusted for better content fit */
+  margin: 4rem auto 2rem; /* Added top and bottom margin */
+  width: 100%;
+  padding: 1rem;
 }
 
+/* Glassmorphic style for leaderboard card */
 .cardL {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.8); /* Slightly more transparent */
   border-radius: 20px;
   padding: 2rem;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px) saturate(180%);
   box-shadow:
-    0px 5px 15px rgba(20, 90, 50, 0.2),
-    0px 15px 40px rgba(20, 90, 50, 0.25);
-  border: 2px solid rgba(46, 204, 113, 0.4);
+    0px 5px 15px rgba(20, 90, 20, 0.15),
+    0px 15px 40px rgba(20, 90, 20, 0.25);
+  border: 1.5px solid rgba(46, 204, 113, 0.3);
   z-index: 2;
   position: relative;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.containerL .cardL:hover {
-  transform: translateY(-8px) scale(1.02);
+.cardL:hover {
+  transform: translateY(-10px) scale(1.03);
   box-shadow:
-    0px 8px 20px rgba(20, 90, 50, 0.3),
-    0px 25px 50px rgba(20, 90, 50, 0.4);
+    0px 8px 25px rgba(20, 90, 20, 0.3),
+    0px 30px 60px rgba(20, 90, 20, 0.45);
 }
 
-/* 🏆 Header Styling */
+/* Leaderboard header */
 .cardL h2 {
   color: var(--dark-green);
-  font-weight: 800;
-  font-size: 2.5rem;
+  font-weight: 900;
+  font-size: 2.75rem;
   text-align: center;
-  margin-bottom: 1rem;
-  text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.15);
+  margin-bottom: 1.5rem;
+  text-shadow: 2px 2px 12px rgba(0, 0, 0, 0.18);
 }
 
 .cardL h2 .trophy {
-  font-size: 2.5rem;
-  margin-right: 10px;
+  font-size: 3rem;
+  margin-right: 12px;
   color: var(--energy-yellow);
-  animation: bounceGlow 2s infinite ease-in-out;
+  animation: bounceGlow 2s ease-in-out infinite;
 }
 
 @keyframes bounceGlow {
-  0%, 100% { transform: translateY(0); filter: drop-shadow(0 0 8px var(--energy-yellow)); }
-  50% { transform: translateY(-6px) scale(1.1); filter: drop-shadow(0 0 15px var(--energy-yellow)); }
+  0%, 100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 10px var(--energy-yellow));
+  }
+  50% {
+    transform: translateY(-8px);
+    filter: drop-shadow(0 0 20px var(--energy-yellow));
+  }
 }
 
-/* 📊 Leaderboard Table */
+/* Table styling */
 .table {
-  border-radius: 15px;
+  border-radius: 16px;
   overflow: hidden;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
 }
 
 .table thead {
   background: var(--sky-blue);
   color: white;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
 }
 
 .table-hover tbody tr {
@@ -153,48 +143,65 @@
 }
 
 .table-hover tbody tr:hover {
-  background: rgba(46, 204, 113, 0.1);
+  background: rgba(46, 204, 113, 0.12);
   transform: scale(1.02);
-  box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* 🥇🥈🥉 Medal Styling */
+/* Medal styles */
 tbody tr:nth-child(1) {
-  background: linear-gradient(135deg, #fff8dc, #f1c40f);
-  border-left: 6px solid var(--energy-yellow);
-  font-weight: bold;
+  background: linear-gradient(135deg, #fff8dc, #ffdc00);
+  border-left: 8px solid var(--energy-yellow);
+  font-weight: 900;
 }
 
 tbody tr:nth-child(2) {
-  background: linear-gradient(135deg, #f0f0f0, #bdc3c7);
-  border-left: 6px solid var(--recycling-grey);
-  font-weight: bold;
+  background: linear-gradient(135deg, #ececec, #b0b0b0);
+  border-left: 8px solid var(--recycling-grey);
+  font-weight: 900;
 }
 
 tbody tr:nth-child(3) {
-  background: linear-gradient(135deg, #ffe0d1, #e67e22);
-  border-left: 6px solid #cd7f32;
-  font-weight: bold;
+  background: linear-gradient(135deg, #fbe3da, #ff9050);
+  border-left: 8px solid #cd7f32;
+  font-weight: 900;
 }
 
-/* 🌍 Eco Points Circular Badge */
+/* Eco points badge */
 .eco-points {
   width: 60px;
   height: 60px;
   border-radius: 50%;
   background: var(--gradient-main);
   color: white;
-  font-weight: bold;
+  font-weight: 900;
   display: flex;
-  align-items: center;
   justify-content: center;
-  margin: auto;
-  box-shadow: 0 0 15px rgba(46, 204, 113, 0.7);
-  animation: pulseGlow 2s infinite;
+  align-items: center;
+  margin: 0 auto;
+  box-shadow: 0 0 20px rgba(46, 204, 113, 0.8);
+  animation: pulse 4s infinite;
 }
 
-@keyframes pulseGlow {
-  0% { box-shadow: 0 0 10px rgba(46, 204, 113, 0.6); }
-  50% { box-shadow: 0 0 20px rgba(0, 191, 255, 0.8); }
-  100% { box-shadow: 0 0 10px rgba(46, 204, 113, 0.6); }
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(0, 191, 50, 0.8);
+  }
+}
+/* Make summary details structured */
+.summary-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .summary-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
 }

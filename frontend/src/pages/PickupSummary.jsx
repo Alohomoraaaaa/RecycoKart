@@ -44,7 +44,6 @@ function PickupSummary() {
     };
 
     fetchCollectorAddress();
-
     return () => clearTimeout(timer);
   }, [requestData]);
 
@@ -62,61 +61,67 @@ function PickupSummary() {
   };
 
   return (
-    <div className="page-bg">
-      <div className="glass-card container my-5 position-relative" style={{ maxWidth: 700, padding: "32px" }}>
-        {showConfetti && <Confetti width={window.innerWidth} height={window.innerHeight} />}
+    <div className="pickup-summary-page">
+      <div className="summary-card container my-5 position-relative">
+        {showConfetti && (
+          <Confetti width={1000} height={1000} recycle={false} />
+        )}
 
         <h2 className="text-success mb-4 text-center">Pickup Summary ♻️</h2>
 
         <motion.div
-          className="card shadow-sm p-4 mx-auto"
+          className="summary-content"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          <motion.p variants={itemVariants}>
-            <strong>Pickup Date:</strong> {requestData.date}
-          </motion.p>
-          <motion.p variants={itemVariants}>
-            <strong>Pickup Time:</strong> {requestData.time}
-          </motion.p>
+          {/* Left column */}
+          <div>
+            <motion.p variants={itemVariants}>
+              <strong>Pickup Date:</strong> {requestData.date}
+            </motion.p>
+            <motion.p variants={itemVariants}>
+              <strong>Pickup Time:</strong> {requestData.time}
+            </motion.p>
 
-          <motion.h5 className="mt-3" variants={itemVariants}>
-            Scrap Details
-          </motion.h5>
-          <motion.div variants={itemVariants}>
-            {requestData.scraps && requestData.scraps.length > 0 ? (
-              <ul>
-                {requestData.scraps.map((item, index) => (
-                  <li key={index}>
-                    {item.scrap_type} - {item.weight} kg
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>
-                {requestData.scrapType} - {requestData.weight} kg
-              </p>
-            )}
-          </motion.div>
+            <motion.h5 className="mt-3" variants={itemVariants}>
+              Scrap Details
+            </motion.h5>
+            <motion.div variants={itemVariants}>
+              {requestData.scraps && requestData.scraps.length > 0 ? (
+                <ul>
+                  {requestData.scraps.map((item, index) => (
+                    <li key={index}>
+                      {item.scrap_type} - {item.weight} kg
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>
+                  {requestData.scrapType} - {requestData.weight} kg
+                </p>
+              )}
+            </motion.div>
 
-          <motion.h5 className="mt-3" variants={itemVariants}>
-            Collector Details
-          </motion.h5>
-          <motion.p variants={itemVariants}>
-            <strong>Name:</strong> {requestData.collectorName}
-          </motion.p>
-          <motion.p variants={itemVariants}>
-            <strong>Locality:</strong> {collectorAddress}
-          </motion.p>
+            <motion.h5 className="mt-3" variants={itemVariants}>
+              Collector Details
+            </motion.h5>
+            <motion.p variants={itemVariants}>
+              <strong>Name:</strong> {requestData.collectorName}
+            </motion.p>
+            <motion.p variants={itemVariants}>
+              <strong>Locality:</strong> {collectorAddress}
+            </motion.p>
 
-          <motion.h5 className="mt-3" variants={itemVariants}>
-            Amount Paid
-          </motion.h5>
-          <motion.p variants={itemVariants}>
-            <strong>Amount Paid:</strong> ₹ {requestData.amount}
-          </motion.p>
+            <motion.h5 className="mt-3" variants={itemVariants}>
+              Amount Paid
+            </motion.h5>
+            <motion.p variants={itemVariants}>
+              <strong>Amount Paid:</strong> ₹ {requestData.amount}
+            </motion.p>
+          </div>
 
+          {/* Right column */}
           {impact && (
             <motion.div className="impact-box mt-4" variants={itemVariants}>
               <h5 className="mb-3">🌱 Environmental Impact (Total)</h5>

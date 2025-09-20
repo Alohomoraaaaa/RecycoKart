@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
-import { db } from "../firebase"; // Import the db object
+import { db } from "../firebase";
+import "../LeaderBoard.css";
 
 function LeaderBoard() {
   const [leaders, setLeaders] = useState([]);
@@ -15,7 +16,6 @@ function LeaderBoard() {
         const usersRef = collection(db, "users");
         const q = query(usersRef, orderBy("recyclables", "desc"));
         const querySnapshot = await getDocs(q);
-        
         const leadersList = [];
         querySnapshot.forEach((doc) => {
           const data = doc.data();
@@ -24,7 +24,6 @@ function LeaderBoard() {
             weight: data.recyclables,
           });
         });
-        
         setLeaders(leadersList);
         setLoading(false);
       } catch (err) {
@@ -32,22 +31,42 @@ function LeaderBoard() {
         setLoading(false);
       }
     };
-    
     fetchLeaders();
   }, []);
 
   if (loading) {
-    return (
-      <div className="page-bg">
-        <div className="glass-card p-5 text-center">Loading leaderboard...</div>
-      </div>
-    );
+    return <p>Loading leaderboard...</p>;
   }
 
   return (
-    <div className="container my-5">
-      <div className="card shadow-sm p-4">
-        <h2 className="text-success text-center mb-4">🏆 Scrap Sellers LeaderBoard</h2>
+    // Apply the new class here
+    <div className="leaderboard-page"> 
+      <div className="main-container">
+        {/* This is the container for the leaves */}
+        <div className="leaf-container">
+          {[...Array(30)].map((_, i) => (
+            <div 
+              key={i} 
+              className="leaf"
+              style={{
+                '--emoji': `"${leafEmojis[Math.floor(Math.random() * leafEmojis.length)]}"`,
+                animationDelay: `${Math.random() * 10}s`,
+                animationDuration: `${5 + Math.random() * 10}s`,
+                '--font-size': `${20 + Math.random() * 30}px`,
+                '--x-start': `${Math.random() * 100 - 50}px`,
+                '--x-end': `${Math.random() * 100 - 50}px`,
+                left: `${Math.random() * 100}vw`
+              }}
+            >
+            </div>
+          ))}
+        </div>
+
+        <div className="containerL my-5">
+          <div className="cardL shadow-sm p-4">
+            <h2 className="text-success text-center mb-4">
+              <span className="trophy">🏆</span>LeaderBoard
+            </h2>
 
             {leaders.length > 0 ? (
               <table className="table table-striped table-hover text-center">

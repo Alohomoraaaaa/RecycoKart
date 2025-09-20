@@ -48,6 +48,7 @@ function Pickup() {
     const selectedDate = new Date(date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+
     if (selectedDate < today) {
       setError("Pickup date cannot be in the past");
       return;
@@ -57,6 +58,18 @@ function Pickup() {
       setError("Please select a pickup time");
       return;
     }
+
+    // ✅ Validate date + time
+    const [hours, minutes] = time.split(":").map(Number);
+    const selectedDateTime = new Date(date);
+    selectedDateTime.setHours(hours, minutes, 0, 0);
+
+    const now = new Date();
+    if (selectedDateTime < now) {
+      setError("Pickup time cannot be in the past");
+      return;
+    }
+
     if (!pickupAddress.trim()) {
       setError("Please enter your full pickup address");
       return;
@@ -75,7 +88,9 @@ function Pickup() {
       }
 
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          address
+        )}`
       );
       const data = await response.json();
       if (!data.length) {

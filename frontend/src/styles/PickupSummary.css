@@ -1,108 +1,106 @@
-/* 🌿 Animated Gradient Background ONLY for PickupSummary */
+/* 🌿 Static Eco-Friendly Background for Prediction Summary */
 .pickup-summary-page {
-  background: linear-gradient(-45deg, #e8f9f1, #d6f5d6, #fff6e5, #e9fdf0);
-  background-size: 400% 400%;
-  animation: gradientShift 18s ease infinite;
+  background: linear-gradient(135deg, #e2ffe5 0%, #f4fdf7 100%);
   min-height: 100vh;
-  border-radius: 12px;
-  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
 }
 
-/* Smooth gradient movement */
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* Gooey card effect */
-.goo-card {
-  border-radius: 15px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px) saturate(150%);
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
+/* ✨ Glassmorphic Wide Card (bigger for summary) */
+.summary-card {
+  width: 1000px;             /* wider */
+  min-height: 1000px;        /* taller */
+  border-radius: 50px;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 8px 32px rgba(34, 139, 34, 0.1), 0 2px 16px rgba(0, 128, 96, 0.1);
+  backdrop-filter: blur(17px) saturate(170%);
   position: relative;
-  overflow: hidden;
   opacity: 0;
-  transform: translateY(20px);
-  animation: cardFadeIn 1s ease forwards;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  transform: translateY(25px) scale(0.95);
+  animation: cardFadeIn 1s cubic-bezier(.43,.01,.36,1.51) forwards;
+}
+
+/* Subtle glowing aura */
+.summary-card::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  background: linear-gradient(120deg, #28a745, #00c896 60%, #b2f7cc 100%);
+  filter: blur(28px);
+  z-index: -1;
+  border-radius: 28px;
+  opacity: 0.2;
+}
+
+/* Optional eco accent */
+.summary-card::after {
+  content: '';
+  position: absolute;
+  top: -20px; 
+  left: 30px;
+  width: 42px;
+  height: 42px;
+  background: url('data:image/svg+xml;utf8,<svg fill="none" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg"><path d="M19 2C26 8 34 26 19 36C4 26 12 8 19 2Z" fill="%231AD278" stroke="%2300c896" stroke-width="2"/></svg>') no-repeat center center/contain;
+  opacity: 0.4;
+  pointer-events: none;
 }
 
 /* Hover lift */
-.goo-card:hover {
-  transform: translateY(-8px) scale(1.03);
-  box-shadow: 0 18px 35px rgba(0, 128, 0, 0.25);
+.summary-card:hover {
+  transform: translateY(-10px) scale(1.03);
+  box-shadow: 0 14px 42px rgba(36, 186, 115, 0.18), 0 3px 20px rgba(40, 167, 69, 0.15);
 }
 
-/* Soft glow around card */
-.goo-card::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  background: linear-gradient(120deg, #28a745, #00c896, #6ae0b6);
-  filter: blur(20px);
-  z-index: -1;
-  border-radius: 20px;
-  opacity: 0.3;
-}
-
-/* Fade-in animation for whole card */
+/* Fade-in animation */
 @keyframes cardFadeIn {
   to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Staggered detail animation with highlight "pop" */
-.goo-card p,
-.goo-card h5,
-.goo-card ul,
-.goo-card div {
-  opacity: 0;
-  transform: translateY(25px) scale(0.95);
-  animation: detailHighlight 1.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-}
-
-.goo-card p:nth-child(1) { animation-delay: 0.3s; }
-.goo-card p:nth-child(2) { animation-delay: 0.6s; }
-.goo-card h5:nth-of-type(1) { animation-delay: 0.9s; }
-.goo-card ul,
-.goo-card div:nth-of-type(1) { animation-delay: 1.2s; }
-.goo-card h5:nth-of-type(2) { animation-delay: 1.5s; }
-.goo-card p:nth-child(6) { animation-delay: 1.8s; }
-.goo-card p:nth-child(7) { animation-delay: 2.1s; }
-.goo-card h5:nth-of-type(3) { animation-delay: 2.4s; }
-.goo-card p:nth-child(9) { animation-delay: 2.7s; }
-.goo-card .impact-box { animation-delay: 3s; }
-
-@keyframes detailHighlight {
-  0% {
-    opacity: 0;
-    transform: translateY(25px) scale(0.95);
-  }
-  70% {
-    opacity: 1;
-    transform: translateY(0) scale(1.08); /* more dramatic pop */
-  }
-  100% {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
 
-/* Impact box breathing effect */
+/* Staggered detail animation */
+.summary-card p,
+.summary-card h5,
+.summary-card ul,
+.summary-card div {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+  animation: detailHighlight 1.2s ease forwards;
+}
+
+.summary-card p:nth-child(1) { animation-delay: 0.3s; }
+.summary-card p:nth-child(2) { animation-delay: 0.5s; }
+.summary-card h5:nth-of-type(1) { animation-delay: 0.7s; }
+.summary-card ul,
+.summary-card div:nth-of-type(1) { animation-delay: 0.9s; }
+.summary-card h5:nth-of-type(2) { animation-delay: 1.1s; }
+.summary-card p:nth-child(6) { animation-delay: 1.3s; }
+.summary-card p:nth-child(7) { animation-delay: 1.5s; }
+.summary-card h5:nth-of-type(3) { animation-delay: 1.7s; }
+.summary-card p:nth-child(9) { animation-delay: 1.9s; }
+.summary-card .impact-box { animation-delay: 2.2s; }
+
+@keyframes detailHighlight {
+  0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+  70% { opacity: 1; transform: translateY(0) scale(1.06); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Impact box */
 .impact-box {
-  padding: 15px;
-  border-radius: 12px;
+  padding: 20px;
+  border-radius: 14px;
   background: #f6fff9;
-  box-shadow: inset 0 0 10px rgba(0, 128, 0, 0.2);
+  box-shadow: inset 0 0 12px rgba(0, 128, 0, 0.25);
   animation: pulse 3s infinite;
 }
 
 @keyframes pulse {
-  0% { box-shadow: inset 0 0 10px rgba(0, 128, 0, 0.2); }
-  50% { box-shadow: inset 0 0 25px rgba(0, 128, 0, 0.4); }
-  100% { box-shadow: inset 0 0 10px rgba(0, 128, 0, 0.2); }
+  0% { box-shadow: inset 0 0 12px rgba(0, 128, 0, 0.2); }
+  50% { box-shadow: inset 0 0 28px rgba(0, 128, 0, 0.35); }
+  100% { box-shadow: inset 0 0 12px rgba(0, 128, 0, 0.2); }
 }
