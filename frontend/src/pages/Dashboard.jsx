@@ -272,21 +272,20 @@ function Dashboard() {
                 </div>
               </div>
 
-              <div className="col-md-8 mb-3">
-                <div className="card shadow-sm p-3">
-                  <h5 className="text-success mb-3">Quick Actions</h5>
-                  <div className="d-flex gap-3 flex-wrap">
-                    <button className="btn btn-success" onClick={handleBookPickup}>
-                      Book Pickup
-                    </button>
-                    <button className="btn btn-primary" onClick={handleViewPrices}>
-                      View Prices
-                    </button>
-                    <button className="btn btn-warning">Download Report</button>
-                  </div>
+            <div className="col-md-8 mb-3">
+              <div className="card shadow-sm p-3">
+                <h5 className="text-success mb-3">Quick Actions</h5>
+                <div className="d-flex gap-3 flex-wrap">
+                  <button className="btn btn-success" onClick={handleBookPickup}>
+                    Book Pickup
+                  </button>
+                  <button className="btn btn-primary" onClick={handleViewPrices}>
+                    View Prices
+                  </button>
                 </div>
               </div>
             </div>
+          </div>
 
             {editing && (
               <div className="card shadow-sm p-3 mt-3">

@@ -183,16 +183,6 @@ export default function WastePredictor() {
           border: "1px solid #e0e0e0",
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)"
         }}>
-          <h3 style={{
-            textAlign: "center",
-            color: "#333",
-            fontSize: "1.5rem",
-            marginBottom: "1rem",
-            borderBottom: "1px dashed #ccc",
-            paddingBottom: "10px"
-          }}>
-            Prediction Result:
-          </h3>
           {result.error ? (
             <p style={{ color: "#d9534f", textAlign: "center", fontWeight: "500" }}>{result.error}</p>
           ) : (
