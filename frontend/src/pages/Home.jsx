@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { auth, db } from "../firebase"; // ✅ make sure db is exported from firebase.js
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
+import "../styles/PickupSummary.css";
 
 function Home() {
   // 🔹 NEW: states for auth + role
@@ -79,26 +80,26 @@ function Home() {
         <h2 className="text-center text-success mb-4">Why Choose Us?</h2>
         <div className="row text-center">
           <div className="col-md-3 mb-3">
-            <div className="card p-3 shadow-sm">
-              <h5>📦 Easy Pickup</h5>
+            <div className="card feature-card p-3 shadow-sm">
+              <h5><span className="icon">📦 Easy Pickup</span></h5>
               <p>Book scrap pickup with just a few clicks.</p>
             </div>
           </div>
           <div className="col-md-3 mb-3">
-            <div className="card p-3 shadow-sm">
-              <h5>💰 Fair Pricing</h5>
+            <div className="card feature-card p-3 shadow-sm">
+              <h5><span className="icon">💰 Fair Pricing</span></h5>
               <p>Get real-time and transparent scrap prices.</p>
             </div>
           </div>
           <div className="col-md-3 mb-3">
-            <div className="card p-3 shadow-sm">
-              <h5>♻️ Eco-Friendly</h5>
+            <div className="card feature-card p-3 shadow-sm">
+              <h5><span className="icon">♻️ Eco-Friendly</span></h5>
               <p>Promote sustainable waste management.</p>
             </div>
           </div>
           <div className="col-md-3 mb-3">
-            <div className="card p-3 shadow-sm">
-              <h5>🤝 Verified Collectors</h5>
+            <div className="card feature-card p-3 shadow-sm">
+              <h5><span className="icon">🤝 Verified Collectors</span></h5>
               <p>Connect with trusted and reliable partners.</p>
             </div>
           </div>

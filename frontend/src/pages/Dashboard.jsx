@@ -272,7 +272,6 @@ function Dashboard() {
                   <button className="btn btn-primary" onClick={handleViewPrices}>
                     View Prices
                   </button>
-                  <button className="btn btn-warning">Download Report</button>
                 </div>
               </div>
             </div>
