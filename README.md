@@ -20,7 +20,7 @@ Our mission is to make recycling **transparent, rewarding, and sustainable** �
 
 ## 🛠️ Tech Stack  
 
-- **Frontend:** React.js ⚛️ + TailwindCSS 🎨  
+- **Frontend:** React.js ⚛️ + TailwindCSS 🎨 + Flask  
 - **Backend:** FastAPI ⚡ + Uvicorn  
 - **Machine Learning Models:** Scikit-learn 🧠 (Waste Prediction + Price Prediction)  
 - **Database / Auth:** Firebase 🔑  
