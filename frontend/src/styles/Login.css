@@ -1,0 +1,140 @@
+/* 🌿 Static Eco-Friendly Background */
+.login-page {
+  background: linear-gradient(135deg, #e2ffe5 0%, #f4fdf7 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Glassmorphic Login Card */
+.login-card {
+  width: 380px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 8px 32px rgba(34, 139, 34, 0.09), 0 1.5px 12px rgba(0,128,96,0.09);
+  backdrop-filter: blur(17px) saturate(170%);
+  transition: transform 0.4s cubic-bezier(0.17,0.67,0.83,0.67), box-shadow 0.35s;
+  position: relative;
+  opacity: 0;
+  transform: translateY(25px) scale(0.95);
+  animation: cardFadeIn 0.9s 0.05s cubic-bezier(.43,.01,.36,1.51) forwards;
+}
+
+/* Subtle glowing aura (extended opacity + colors) */
+.login-card::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  background: linear-gradient(120deg, #28a745, #00c896 60%, #b2f7cc 100%);
+  filter: blur(24px);
+  z-index: -1;
+  border-radius: 28px;
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+/* Leaf SVG Accent */
+.login-card::after {
+  content: '';
+  position: absolute;
+  top: -18px; 
+  left: 24px;
+  width: 38px;
+  height: 38px;
+  background: url('data:image/svg+xml;utf8,<svg fill="none" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg"><path d="M19 2C26 8 34 26 19 36C4 26 12 8 19 2Z" fill="%231AD278" stroke="%2300c896" stroke-width="2"/></svg>') no-repeat center center/contain;
+  opacity: 0.36;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Hover lift and deeper shadow */
+.login-card:hover {
+  transform: translateY(-10px) scale(1.035);
+  box-shadow: 0 12px 40px rgba(36, 186, 115, 0.18), 0 2.5px 18px rgba(40, 167, 69, 0.14);
+}
+
+/* Fade-in animation */
+@keyframes cardFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Stylish form fields */
+.login-card input[type="text"],
+.login-card input[type="password"] {
+  width: 100%;
+  margin: 12px 0 21px 0;
+  padding: 13px 16px;
+  border: none;
+  border-radius: 9px;
+  background: rgba(236, 255, 241, 0.66);
+  box-shadow: 0 1.5px 8px rgba(40, 167, 69, 0.035);
+  font-size: 16px;
+  color: #22744a;
+  outline: none;
+  transition: background 0.2s, box-shadow 0.25s;
+}
+
+.login-card input[type="text"]:focus,
+.login-card input[type="password"]:focus {
+  background: #f5fff9;
+  box-shadow: 0 0 0 2px #28a74570, 0 2px 14px rgba(34, 139, 34, 0.11);
+}
+
+/* Enhanced Button with focus accessibility */
+.login-card button {
+  transition: all 0.3s;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #28a745 60%, #00c896 100%);
+  color: #f4fdf7;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 12px 26px;
+  cursor: pointer;
+  margin-bottom: 15px;
+  outline: none;
+  box-shadow: 0 2px 6px rgba(52,168,83,0.10);
+  animation-delay: 0.7s;
+  opacity: 0;
+  transform: translateY(15px);
+  animation: fadeUp 0.8s ease forwards 0.7s;
+}
+
+.login-card button:hover, .login-card button:focus {
+  background: #23c665;
+  color: #fff;
+  transform: scale(1.06);
+  box-shadow: 0 7px 21px rgba(40, 167, 69, 0.25);
+}
+
+/* Focus rings for accessibility */
+.login-card button:focus,
+.login-card input:focus {
+  outline: 2.5px solid #4ce899;
+  outline-offset: 2px;
+}
+
+/* Smooth text animations (same as before; ensures smooth fade-up for all elements) */
+.login-card h2, .login-card p, .login-card a {
+  opacity: 0;
+  transform: translateY(15px);
+  animation: fadeUp 0.8s ease forwards;
+}
+
+.login-card h2 { animation-delay: 0.3s;}
+.login-card p { animation-delay: 0.5s;}
+.login-card button { animation-delay: 0.7s;}
+.login-card a { animation-delay: 0.9s;}
+
+/* Fade up keyframes */
+@keyframes fadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
