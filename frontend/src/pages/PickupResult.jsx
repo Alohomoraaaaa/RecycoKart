@@ -22,6 +22,13 @@ const collectorIcon = new L.Icon({
   popupAnchor: [0, -32],
 });
 
+const dropOffIcon = new L.Icon({
+  iconUrl: "https://maps.gstatic.com/mapfiles/ms2/micons/green-dot.png",
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
+});
+
 // Haversine distance
 const getDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371; // km
@@ -42,7 +49,10 @@ function PickupResult() {
 
   const [collectors, setCollectors] = useState([]);
   const [selectedCollectors, setSelectedCollectors] = useState([]);
-  const [userData, setUserData] = useState({}); // ✅ store user details
+  const [userData, setUserData] = useState({}); // store user details
+
+  const [dropOffPoints, setDropOffPoints] = useState([]);
+  const [nearestDropOff, setNearestDropOff] = useState(null);
 
   // Fetch current user details (name, phone)
   useEffect(() => {
@@ -109,6 +119,37 @@ function PickupResult() {
 
     fetchCollectors();
   }, [scrapTypes, time, userLat, userLng]);
+
+  // Fetch drop-off points and find nearest
+  useEffect(() => {
+    const fetchDropOffPoints = async () => {
+      try {
+        const dropOffRef = collection(db, "dropOffPoints");
+        const dropOffSnapshot = await getDocs(dropOffRef);
+        const activeDropOffs = dropOffSnapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter(d => d.dfactive);
+
+        // Calculate distance for each drop-off point
+        const withDistance = activeDropOffs.map(d => {
+          const distance = getDistance(userLat, userLng, d.dflat, d.dflong);
+          return { ...d, distance };
+        });
+
+        // Sort by nearest
+        withDistance.sort((a, b) => a.distance - b.distance);
+
+        setDropOffPoints(withDistance);
+        setNearestDropOff(withDistance[0] || null);
+      } catch (error) {
+        console.error("Error fetching drop-off points:", error);
+      }
+    };
+
+    if (userLat && userLng) {
+      fetchDropOffPoints();
+    }
+  }, [userLat, userLng]);
 
   const toggleCollector = (col) => {
     setSelectedCollectors((prev) =>
@@ -184,6 +225,21 @@ function PickupResult() {
                   </Popup>
                 </Marker>
               ))}
+
+              {dropOffPoints.map((point) => (
+                <Marker
+                  key={point.id}
+                  position={[point.dflat, point.dflong]}
+                  icon={dropOffIcon}
+                >
+                  <Popup>
+                    <strong>{point.dfname}</strong> <br />
+                    {point.dfaddress} <br />
+                    {point.distance.toFixed(2)} km away
+                    {point.id === nearestDropOff?.id && <div><b>Nearest Drop-off Point</b></div>}
+                  </Popup>
+                </Marker>
+              ))}
             </MapContainer>
           </div>
         </div>
@@ -226,6 +282,20 @@ function PickupResult() {
             })}
           </div>
         </div>
+        <h4 className="mb-3 mt-4">Nearest Drop-off Points</h4>
+          <div className="d-flex flex-column gap-3">
+            {dropOffPoints.slice(0, 3).map((point) => (
+              <div key={point.id} className="card shadow-sm">
+                <div className="card-body">
+                  <h5 className="card-title mb-0">{point.dfname}</h5>
+                  <span className="text-muted small">
+                    {point.distance.toFixed(2)} km away
+                  </span>
+                </div>
+    </div>
+  ))}
+</div>
+
       </div>
 
       <button className="btn btn-lg btn-success w-100 mt-4" onClick={handleRequest}>
