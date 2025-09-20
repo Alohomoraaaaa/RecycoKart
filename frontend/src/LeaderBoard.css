@@ -1,0 +1,200 @@
+/*
+ * LeaderBoard.css
+ *
+ * This file contains all the styling and animations for the LeaderBoard component.
+ * It includes a background with a dynamic gradient and falling nature-themed elements,
+ * a centered container, and a styled leaderboard table.
+ */
+
+/* 🌱 Root Theme Variables */
+:root {
+  --primary-green: #2ecc71;
+  --dark-green: #145a32;
+  --earth-brown: #8d6e63;
+  --sky-blue: #a3e6ff;
+  --energy-yellow: #f1c40f;
+  --recycling-grey: #7f8c8d;
+  --neutral-bg: #e6f7ff;
+  --gradient-main: linear-gradient(135deg, #bfe31d, #afe41d, #98e51d,#7ee61d);
+}
+
+/* 🌿 Background with Gradient + Particles - APPLIED ONLY TO LEADERBOARD PAGE */
+.leaderboard-page {
+  background: var(--neutral-bg);
+  background-image: var(--gradient-main);
+  background-size: 400% 400%;
+  animation: gradientShift 20s ease infinite;
+  overflow-x: hidden;
+  position: relative;
+  min-height: 100vh;
+  /* This setup centers the content horizontally within the page */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* Flowing Gradient Animation */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 🍂 More Realistic Falling Leaves Animation */
+.leaf-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.leaf-container .leaf {
+    position: absolute;
+    top: 60px;
+    opacity: 0;
+    will-change: transform, opacity;
+    animation: fall linear infinite;
+}
+
+.leaf-container .leaf::before {
+    content: var(--emoji);
+    font-size: var(--font-size);
+}
+
+/* Base animation for all leaves */
+@keyframes fall {
+    0% {
+        transform: translate(var(--x-start), 0) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--x-end), 100vh) rotate(360deg);
+        opacity: 0.5;
+    }
+}
+
+/* 🌟 Leaderboard Container */
+.containerL {
+    /* Significantly increased max-width for a much wider container */
+    max-width: 2000px; 
+    /* Use margin: auto for horizontal centering */
+    margin-left: auto;
+    margin-right: auto;
+    /* This adds the small space below the navbar */
+    margin-top: 1cm;
+    /* Adjusted width to be responsive and not exceed parent */
+    width: 100%;
+}
+
+.cardL {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  padding: 2rem;
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0px 5px 15px rgba(20, 90, 50, 0.2),
+    0px 15px 40px rgba(20, 90, 50, 0.25);
+  border: 2px solid rgba(46, 204, 113, 0.4);
+  z-index: 2;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.containerL .cardL:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow:
+    0px 8px 20px rgba(20, 90, 50, 0.3),
+    0px 25px 50px rgba(20, 90, 50, 0.4);
+}
+
+/* 🏆 Header Styling */
+.cardL h2 {
+  color: var(--dark-green);
+  font-weight: 800;
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+.cardL h2 .trophy {
+  font-size: 2.5rem;
+  margin-right: 10px;
+  color: var(--energy-yellow);
+  animation: bounceGlow 2s infinite ease-in-out;
+}
+
+@keyframes bounceGlow {
+  0%, 100% { transform: translateY(0); filter: drop-shadow(0 0 8px var(--energy-yellow)); }
+  50% { transform: translateY(-6px) scale(1.1); filter: drop-shadow(0 0 15px var(--energy-yellow)); }
+}
+
+/* 📊 Leaderboard Table */
+.table {
+  border-radius: 15px;
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.table thead {
+  background: var(--sky-blue);
+  color: white;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.table-hover tbody tr {
+  transition: all 0.3s ease;
+}
+
+.table-hover tbody tr:hover {
+  background: rgba(46, 204, 113, 0.1);
+  transform: scale(1.02);
+  box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* 🥇🥈🥉 Medal Styling */
+tbody tr:nth-child(1) {
+  background: linear-gradient(135deg, #fff8dc, #f1c40f);
+  border-left: 6px solid var(--energy-yellow);
+  font-weight: bold;
+}
+
+tbody tr:nth-child(2) {
+  background: linear-gradient(135deg, #f0f0f0, #bdc3c7);
+  border-left: 6px solid var(--recycling-grey);
+  font-weight: bold;
+}
+
+tbody tr:nth-child(3) {
+  background: linear-gradient(135deg, #ffe0d1, #e67e22);
+  border-left: 6px solid #cd7f32;
+  font-weight: bold;
+}
+
+/* 🌍 Eco Points Circular Badge */
+.eco-points {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--gradient-main);
+  color: white;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  box-shadow: 0 0 15px rgba(46, 204, 113, 0.7);
+  animation: pulseGlow 2s infinite;
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 10px rgba(46, 204, 113, 0.6); }
+  50% { box-shadow: 0 0 20px rgba(0, 191, 255, 0.8); }
+  100% { box-shadow: 0 0 10px rgba(46, 204, 113, 0.6); }
+}
