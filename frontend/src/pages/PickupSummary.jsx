@@ -1,27 +1,34 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import Confetti from "react-confetti";
 import { motion } from "framer-motion";
-import "../styles/PickupSummary.css";
+import pickupImage from "../components/Home-img.png"; // Correct import
+import "../styles/PickupSummary.css"; 
 
 function PickupSummary() {
   const location = useLocation();
-  const { requestData } = location.state;
+  const navigate = useNavigate();
+  const { requestData } = location.state || {}; // Added fallback
 
   const [impact, setImpact] = useState(null);
   const [collectorAddress, setCollectorAddress] = useState("");
   const [showConfetti, setShowConfetti] = useState(true);
 
   useEffect(() => {
+    if (!requestData) return; // Guard if no data
+
+    // Stop confetti after 5 seconds
     const timer = setTimeout(() => setShowConfetti(false), 5000);
 
+    // Prepare scraps list
     const scrapsList =
       requestData.scraps && requestData.scraps.length > 0
         ? requestData.scraps
         : [{ scrap_type: requestData.scrapType, weight: requestData.weight }];
 
+    // Fetch environmental impact
     fetch("http://127.0.0.1:5000/environmental_impact", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -31,28 +38,29 @@ function PickupSummary() {
       .then((data) => setImpact(data))
       .catch((err) => console.error("Error fetching impact:", err));
 
+    // Fetch collector address from Firebase
     const fetchCollectorAddress = async () => {
       try {
         const collectorRef = doc(db, "users", requestData.collectorId);
         const collectorSnap = await getDoc(collectorRef);
         if (collectorSnap.exists()) {
           setCollectorAddress(collectorSnap.data().address);
+        } else {
+          setCollectorAddress("Address not available");
         }
       } catch (error) {
         console.error("Error fetching collector address:", error);
       }
     };
-
     fetchCollectorAddress();
+
     return () => clearTimeout(timer);
   }, [requestData]);
 
+  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.3 },
-    },
+    visible: { opacity: 1, transition: { staggerChildren: 0.3 } },
   };
 
   const itemVariants = {
@@ -60,11 +68,26 @@ function PickupSummary() {
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
   };
 
+  if (!requestData) {
+    return (
+      <div className="pickup-summary-page text-center my-5">
+        <p>Pickup data not available. Please go back.</p>
+        <button className="btn btn-primary" onClick={() => navigate(-1)}>
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="pickup-summary-page">
       <div className="summary-card container my-5 position-relative">
         {showConfetti && (
-          <Confetti width={1000} height={1000} recycle={false} />
+          <Confetti
+            width={window.innerWidth}
+            height={window.innerHeight}
+            recycle={false}
+          />
         )}
 
         <h2 className="text-success mb-4 text-center">Pickup Summary ♻️</h2>
@@ -75,7 +98,7 @@ function PickupSummary() {
           initial="hidden"
           animate="visible"
         >
-          {/* Left column */}
+          {/* Left Column */}
           <div>
             <motion.p variants={itemVariants}>
               <strong>Pickup Date:</strong> {requestData.date}
@@ -121,7 +144,7 @@ function PickupSummary() {
             </motion.p>
           </div>
 
-          {/* Right column */}
+          {/* Right Column: Environmental Impact */}
           {impact && (
             <motion.div className="impact-box mt-4" variants={itemVariants}>
               <h5 className="mb-3">🌱 Environmental Impact (Total)</h5>
@@ -130,6 +153,18 @@ function PickupSummary() {
               <p>Landfill Diverted: {impact.landfill_diverted} kg</p>
             </motion.div>
           )}
+
+          {/* Image at Bottom */}
+          <motion.div
+            className="pickup-summary-image mt-4 text-center"
+            variants={itemVariants}
+          >
+            <img
+              src={pickupImage}
+              alt="Pickup Illustration"
+              style={{ maxWidth: "500px", margin: "0 auto", display: "block" }}
+            />
+          </motion.div>
         </motion.div>
       </div>
     </div>
