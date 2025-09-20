@@ -34,6 +34,20 @@ def calculate_environmental_impact(scrap_type, weight):
         "landfill_diverted": round(landfill_diverted, 2)
     }
 
+# --- Badge Calculation ---
+def get_badge_from_weight(total_weight):
+    if total_weight >= 5 and total_weight < 10:
+        return "Bronze Recycler 🥉"
+    if total_weight >= 10 and total_weight < 15:
+        return "Silver Recycler 🥈"
+    if total_weight >= 15 and total_weight < 20:
+        return "Gold Recycler 🥇"
+    if total_weight >= 20 and total_weight < 50:
+        return "Platinum Recycler 🏅"
+    if total_weight >= 50:
+        return "Recycling Warrior🏆"
+    return None
+
 # --- Endpoint for Multiple Scraps in a Transaction ---
 @app.route("/environmental_impact", methods=["POST"])
 def environmental_impact():
@@ -86,11 +100,14 @@ def get_user_impact(userId):
                         total_landfill += impact["landfill_diverted"]
                         total_weight += weight
 
+        badge = get_badge_from_weight(total_weight)
+
         return jsonify({
             "co2_saved": round(total_co2, 2),
             "water_conserved": round(total_water, 2),
             "landfill_diverted": round(total_landfill, 2),
-            "total_weight": round(total_weight, 2)
+            "total_weight": round(total_weight, 2),
+            "badge": badge
         })
     except Exception as e:
         print(f"Error fetching data from Firestore: {e}")

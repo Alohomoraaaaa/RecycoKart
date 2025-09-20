@@ -121,7 +121,7 @@ function Register() {
               alignItems: "center",
               justifyContent: "center",
               fontSize: "1.1rem",
-              padding: "14px 0",
+              padding: "14px 10px",
               fontWeight: "600",
               cursor: "pointer",
               transition: "all 0.3s ease",
