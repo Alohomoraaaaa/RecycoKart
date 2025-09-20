@@ -3,12 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 
-// ✅ Function to dynamically load PayPal SDK
+// PayPal script loader stays as is
 function loadPayPalScript(clientId, currency = "USD") {
   return new Promise((resolve, reject) => {
-    // Check if script already exists to prevent duplicates
     if (document.getElementById("paypal-sdk")) {
-      // If the currency is different, remove the old script
       if (window.paypal && window.paypal.config.currency !== currency) {
         document.getElementById("paypal-sdk").remove();
       } else {
@@ -16,7 +14,6 @@ function loadPayPalScript(clientId, currency = "USD") {
         return;
       }
     }
-
     const script = document.createElement("script");
     script.id = "paypal-sdk";
     script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=${currency}`;
@@ -45,7 +42,6 @@ function CompletePickup() {
 
   const PAYPAL_CLIENT_ID = "ARFNCBD4t0mi9f6UbljwNv2myef97Foh4VsssMDJDft-oVwHJVocYZJIP4R4h0m2GGUNHMQCIXFQnnWX";
 
-  // ✅ Fetch pickup request and user details
   useEffect(() => {
     const fetchRequest = async () => {
       try {
@@ -83,7 +79,6 @@ function CompletePickup() {
     fetchRequest();
   }, [requestId, navigate]);
 
-  // ✅ Auto-calculate total amount
   useEffect(() => {
     const total = scraps.reduce((sum, item) => {
       const price = BASE_PRICES[item.scrap_type] || 10;
@@ -92,7 +87,6 @@ function CompletePickup() {
     setTotalAmount(total.toFixed(2));
   }, [scraps]);
 
-  // ✅ Dynamically render PayPal button
   useEffect(() => {
     if (totalAmount > 0) {
       loadPayPalScript(PAYPAL_CLIENT_ID, "USD")
@@ -112,14 +106,13 @@ function CompletePickup() {
               const details = await actions.order.capture();
               console.log("Payment successful:", details);
 
-              // Update Firestore after successful payment
               const requestRef = doc(db, "pickupRequests", requestId);
               await updateDoc(requestRef, {
                 scraps: scraps,
                 amount: parseFloat(totalAmount),
                 status: "completed",
                 paymentStatus: "Paid",
-                paypalDetails: details // Save payment details for records
+                paypalDetails: details
               });
 
               alert("Payment Successful!");
@@ -135,14 +128,12 @@ function CompletePickup() {
     }
   }, [totalAmount, requestId, navigate, scraps]);
 
-  // Handle weight input change
   const handleWeightChange = (index, value) => {
     const newScraps = [...scraps];
     newScraps[index].weight = value; 
     setScraps(newScraps);
   };
-  
-  // The form submit handler is now for validation only
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
     if (!scraps.every(item => parseFloat(item.weight) > 0)) {
@@ -151,12 +142,18 @@ function CompletePickup() {
     // The PayPal button will handle the rest
   };
 
-  if (!request) return <p className="text-center mt-5">Loading pickup...</p>;
+  if (!request) return (
+    <div className="page-bg">
+      <div className="glass-card">
+        <p className="text-center mt-5">Loading pickup...</p>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="container my-5">
-      <h2 className="text-success mb-4">Complete Pickup</h2>
-      <div className="card shadow p-4">
+    <div className="page-bg">
+      <div className="glass-card" style={{ maxWidth: 520, width: "100%", padding: "32px" }}>
+        <h2 className="text-success mb-4">Complete Pickup</h2>
         <h5>Pickup Details</h5>
         <p><strong>Date:</strong> {request.date}</p>
         <p><strong>Time:</strong> {request.time}</p>
@@ -197,7 +194,6 @@ function CompletePickup() {
             <input type="text" className="form-control" value={totalAmount} disabled />
           </div>
 
-          {/* Render PayPal button only if totalAmount is calculated and valid */}
           {totalAmount > 0 ? (
             <div id="paypal-button-container"></div>
           ) : (

@@ -17,7 +17,6 @@ import EcoBadges from "../pages/EcoBadges";
 function Dashboard() {
   const navigate = useNavigate();
 
-  // States
   const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -29,7 +28,6 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // edit profile states
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({
     name: "",
@@ -50,7 +48,6 @@ function Dashboard() {
         }
 
         try {
-          // Fetch Profile from users
           const profileRef = doc(db, "users", user.uid);
           const profileSnap = await getDoc(profileRef);
 
@@ -58,7 +55,6 @@ function Dashboard() {
             const userData = profileSnap.data();
 
             if (userData.role === "collector") {
-              // ✅ fetch extra collector details
               const collectorRef = doc(db, "collectors", user.uid);
               const collectorSnap = await getDoc(collectorRef);
 
@@ -86,11 +82,10 @@ function Dashboard() {
               });
               setMyBookings(bookings);
             } else {
-              // normal user
               setProfile(userData);
               setEditForm(userData);
 
-              // --- Real-time listener for user pickups ---
+              // Real-time listener for user pickups
               const requestsRef = collection(db, "pickupRequests");
               const q = query(requestsRef, where("userId", "==", user.uid));
 
@@ -101,15 +96,10 @@ function Dashboard() {
                   activities.push({ id: doc.id, ...requestData });
                 });
 
-                let completed = activities.filter(
-                  (r) => r.status === "completed"
-                );
+                let completed = activities.filter((r) => r.status === "completed");
 
                 let totalOrders = completed.length;
-                let totalEarnings = completed.reduce(
-                  (sum, r) => sum + (r.amount || 0),
-                  0
-                );
+                let totalEarnings = completed.reduce((sum, r) => sum + (r.amount || 0), 0);
                 let recyclables = completed.reduce((sum, r) => {
                   if (Array.isArray(r.scraps)) {
                     const totalWeight = r.scraps.reduce(
@@ -163,11 +153,9 @@ function Dashboard() {
     try {
       const user = auth.currentUser;
 
-      // update users collection
       const profileRef = doc(db, "users", user.uid);
       await updateDoc(profileRef, editForm);
 
-      // if collector, also update collectors collection
       if (profile.role === "collector") {
         const collectorRef = doc(db, "collectors", user.uid);
         await updateDoc(collectorRef, {
@@ -193,423 +181,500 @@ function Dashboard() {
   const handleBookPickup = () => navigate("/pickup");
   const handleViewPrices = () => navigate("/prices");
 
-  if (authLoading) return <p className="text-center mt-5">Loading...</p>;
-  if (loading) return <p className="text-center mt-5">Loading...</p>;
-  if (!profile) return <p className="text-center mt-5">No profile found.</p>;
+  if (authLoading)
+    return (
+      <div className="page-bg">
+        <div className="glass-card">
+          <p className="text-center mt-5">Loading...</p>
+        </div>
+      </div>
+    );
+  if (loading)
+    return (
+      <div className="page-bg">
+        <div className="glass-card">
+          <p className="text-center mt-5">Loading...</p>
+        </div>
+      </div>
+    );
+  if (!profile)
+    return (
+      <div className="page-bg">
+        <div className="glass-card">
+          <p className="text-center mt-5">No profile found.</p>
+        </div>
+      </div>
+    );
 
   return (
-    <div className="container my-5">
-      <h2 className="text-success mb-4">Welcome {profile.name} 👋</h2>
+    <div className="page-bg">
+      <div
+        className="glass-card"
+        style={{ maxWidth: 1100, width: "100%", padding: "32px", margin: "32px auto" }}
+      >
+        <h2 className="text-success mb-4">Welcome {profile.name} 👋</h2>
 
-      {/* USER DASHBOARD */}
-      {profile.role === "user" && (
-        <>
-          {/* Stats Row */}
-          <div className="row">
-            <div className="col-md-4 mb-3">
-              <div className="card shadow-sm p-3 text-center">
-                <h5 className="text-muted">Total Orders</h5>
-                <h2 className="text-success">{stats.totalOrders}</h2>
+        {/* USER DASHBOARD */}
+        {profile.role === "user" && (
+          <>
+            <div className="row">
+              <div className="col-md-4 mb-3">
+                <div className="card shadow-sm p-3 text-center">
+                  <h5 className="text-muted">Total Orders</h5>
+                  <h2 className="text-success">{stats.totalOrders}</h2>
+                </div>
+              </div>
+              <div className="col-md-4 mb-3">
+                <div className="card shadow-sm p-3 text-center">
+                  <h5 className="text-muted">Total Earnings</h5>
+                  <h2 className="text-primary">₹ {stats.totalEarnings}</h2>
+                </div>
+              </div>
+              <div className="col-md-4 mb-3">
+                <div className="card shadow-sm p-3 text-center">
+                  <h5 className="text-muted">Recyclables Sold</h5>
+                  <h2 className="text-warning">{stats.recyclables} kg</h2>
+                </div>
               </div>
             </div>
-            <div className="col-md-4 mb-3">
-              <div className="card shadow-sm p-3 text-center">
-                <h5 className="text-muted">Total Earnings</h5>
-                <h2 className="text-primary">₹ {stats.totalEarnings}</h2>
-              </div>
-            </div>
-            <div className="col-md-4 mb-3">
-              <div className="card shadow-sm p-3 text-center">
-                <h5 className="text-muted">Recyclables Sold</h5>
-                <h2 className="text-warning">{stats.recyclables} kg</h2>
-              </div>
-            </div>
-          </div>
 
-          {/* 🔹 EcoBadges Section */}
-          <div className="mt-4">
-            <div className="card shadow-sm p-3">
-              <EcoBadges userId={auth.currentUser.uid} />
-            </div>
-          </div>
-
-          {/* Profile + Actions */}
-          <div className="row mt-4">
-            <div className="col-md-4 mb-3">
+            <div className="mt-4">
               <div className="card shadow-sm p-3">
-                <h5 className="text-success">Your Profile</h5>
-                <p>
-                  <strong>Email:</strong> {profile.email}
-                </p>
-                <p>
-                  <strong>Contact:</strong> {profile.contact}
-                </p>
-                <p>
-                  <strong>Role:</strong> {profile.role}
-                </p>
+                <EcoBadges userId={auth.currentUser.uid} />
+              </div>
+            </div>
 
-                <div className="d-flex gap-2">
+            <div className="row mt-4">
+              <div className="col-md-4 mb-3">
+                <div className="card shadow-sm p-3">
+                  <h5 className="text-success">Your Profile</h5>
+                  <p>
+                    <strong>Email:</strong> {profile.email}
+                  </p>
+                  <p>
+                    <strong>Contact:</strong> {profile.contact}
+                  </p>
+                  <p>
+                    <strong>Role:</strong> {profile.role}
+                  </p>
+
+                  <div className="d-flex gap-2">
+                    <button
+                      className="btn btn-warning w-50"
+                      onClick={() => setEditing(true)}
+                    >
+                      Edit Profile
+                    </button>
+                    <button className="btn btn-danger w-50" onClick={handleLogout}>
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-8 mb-3">
+                <div className="card shadow-sm p-3">
+                  <h5 className="text-success mb-3">Quick Actions</h5>
+                  <div className="d-flex gap-3 flex-wrap">
+                    <button className="btn btn-success" onClick={handleBookPickup}>
+                      Book Pickup
+                    </button>
+                    <button className="btn btn-primary" onClick={handleViewPrices}>
+                      View Prices
+                    </button>
+                    <button className="btn btn-warning">Download Report</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {editing && (
+              <div className="card shadow-sm p-3 mt-3">
+                <h5 className="text-success mb-3">Edit Profile</h5>
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Name"
+                      value={editForm.name}
+                      readOnly
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <input
+                      type="email"
+                      className="form-control"
+                      placeholder="Email"
+                      value={editForm.email}
+                      readOnly
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Contact"
+                      value={editForm.contact}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, contact: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Address"
+                      value={editForm.address}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, address: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Availability Start</label>
+                    <input
+                      type="time"
+                      className="form-control"
+                      value={editForm.availability?.start || ""}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          availability: {
+                            ...editForm.availability,
+                            start: e.target.value,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Availability End</label>
+                    <input
+                      type="time"
+                      className="form-control"
+                      value={editForm.availability?.end || ""}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          availability: {
+                            ...editForm.availability,
+                            end: e.target.value,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Scrap Types (comma separated)"
+                      value={
+                        Array.isArray(editForm.scrapTypes)
+                          ? editForm.scrapTypes.join(", ")
+                          : ""
+                      }
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          scrapTypes: e.target.value
+                            .split(",")
+                            .map((s) => s.trim()),
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="mt-3 d-flex gap-2">
+                  <button className="btn btn-success" onClick={handleSaveProfile}>
+                    Save
+                  </button>
                   <button
-                    className="btn btn-warning w-50"
-                    onClick={() => setEditing(true)}
+                    className="btn btn-secondary"
+                    onClick={() => setEditing(false)}
                   >
-                    Edit Profile
-                  </button>
-                  <button className="btn btn-danger w-50" onClick={handleLogout}>
-                    Logout
+                    Cancel
                   </button>
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="col-md-8 mb-3">
-              <div className="card shadow-sm p-3">
-                <h5 className="text-success mb-3">Quick Actions</h5>
-                <div className="d-flex gap-3 flex-wrap">
-                  <button className="btn btn-success" onClick={handleBookPickup}>
-                    Book Pickup
-                  </button>
-                  <button className="btn btn-primary" onClick={handleViewPrices}>
-                    View Prices
-                  </button>
-                  <button className="btn btn-warning">Download Report</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Edit Profile Form */}
-          {editing && (
-            <div className="card shadow-sm p-3 mt-3">
-              <h5 className="text-success mb-3">Edit Profile</h5>
-              <div className="row g-3">
-                <div className="col-md-6">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Name"
-                    value={editForm.name}
-                    readOnly
-                  />
-                </div>
-                <div className="col-md-6">
-                  <input
-                    type="email"
-                    className="form-control"
-                    placeholder="Email"
-                    value={editForm.email}
-                    readOnly
-                  />
-                </div>
-                <div className="col-md-6">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Contact"
-                    value={editForm.contact}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, contact: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-              <div className="mt-3 d-flex gap-2">
-                <button className="btn btn-success" onClick={handleSaveProfile}>
-                  Save
-                </button>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setEditing(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Recent Activity */}
-          <div className="card shadow-sm mt-4">
-            <div className="card-header bg-success text-white">
-              Recent Activity
-            </div>
-            <div className="card-body">
-              {recentActivity.length > 0 ? (
-                <div className="row">
-                  {recentActivity.map((activity, index) => (
-                    <div key={index} className="col-md-6 mb-3">
-                      <div className="card p-3 shadow-sm h-100">
-                        <h6 className="text-success mb-2">
-                          {activity.scrapTypes
-                            ? activity.scrapTypes.join(", ")
-                            : activity.scrapType}{" "}
-                          Pickup
-                        </h6>
-                        <p className="mb-1">
-                          <strong>Date:</strong> {activity.date}
-                        </p>
-                        <p className="mb-1">
-                          <strong>Total Weight:</strong>{" "}
-                          {Array.isArray(activity.scraps)
-                            ? activity.scraps.reduce(
-                                (sum, s) => sum + (Number(s.weight) || 0),
-                                0
-                              )
-                            : activity.weight || 0}{" "}
-                          kg
-                        </p>
-                        <p className="mb-1">
-                          <strong>Status:</strong>{" "}
-                          <span
-                            className={
-                              activity.status === "completed"
-                                ? "text-success"
-                                : "text-muted"
-                            }
-                          >
-                            {activity.status}
-                          </span>
-                        </p>
-                        {activity.collectorName && (
+            <div className="card shadow-sm mt-4">
+              <div className="card-header bg-success text-white">Recent Activity</div>
+              <div className="card-body">
+                {recentActivity.length > 0 ? (
+                  <div className="row">
+                    {recentActivity.map((activity, index) => (
+                      <div key={index} className="col-md-6 mb-3">
+                        <div className="card p-3 shadow-sm h-100">
+                          <h6 className="text-success mb-2">
+                            {activity.scrapTypes
+                              ? activity.scrapTypes.join(", ")
+                              : activity.scrapType}{" "}
+                            Pickup
+                          </h6>
                           <p className="mb-1">
-                            <strong>Collector:</strong>{" "}
-                            {activity.collectorName}
+                            <strong>Date:</strong> {activity.date}
                           </p>
-                        )}
+                          <p className="mb-1">
+                            <strong>Total Weight:</strong>{" "}
+                            {Array.isArray(activity.scraps)
+                              ? activity.scraps.reduce(
+                                  (sum, s) => sum + (Number(s.weight) || 0),
+                                  0
+                                )
+                              : activity.weight || 0}{" "}
+                            kg
+                          </p>
+                          <p className="mb-1">
+                            <strong>Status:</strong>{" "}
+                            <span
+                              className={
+                                activity.status === "completed"
+                                  ? "text-success"
+                                  : "text-muted"
+                              }
+                            >
+                              {activity.status}
+                            </span>
+                          </p>
+                          {activity.collectorName && (
+                            <p className="mb-1">
+                              <strong>Collector:</strong> {activity.collectorName}
+                            </p>
+                          )}
 
-                        {activity.status === "completed" && (
-                          <button
-                            className="btn btn-outline-success btn-sm mt-2"
-                            onClick={() =>
-                              navigate("/pickup-summary", {
-                                state: { requestData: activity },
-                              })
-                            }
-                          >
-                            View Pickup Summary
-                          </button>
-                        )}
+                          {activity.status === "completed" && (
+                            <button
+                              className="btn btn-outline-success btn-sm mt-2"
+                              onClick={() =>
+                                navigate("/pickup-summary", {
+                                  state: { requestData: activity },
+                                })
+                              }
+                            >
+                              View Pickup Summary
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                ) : (
+                  <p>No recent activity</p>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* COLLECTOR DASHBOARD */}
+        {profile.role === "collector" && (
+          <>
+            <div className="card p-4 shadow-sm mb-4">
+              <p>
+                <strong>Email:</strong> {profile.email}
+              </p>
+              <p>
+                <strong>Contact:</strong> {profile.contact}
+              </p>
+              <p>
+                <strong>Locality:</strong> {profile.address}
+              </p>
+              <p>
+                <strong>Availability Time:</strong>{" "}
+                {profile.availability
+                  ? `${profile.availability.start} - ${profile.availability.end}`
+                  : "Not set"}
+              </p>
+              <p>
+                <strong>Scrap Types Collected:</strong>{" "}
+                {Array.isArray(profile.scrapTypes) && profile.scrapTypes.length > 0
+                  ? profile.scrapTypes.join(", ")
+                  : "Not specified"}
+              </p>
+              <p>
+                <strong>Role:</strong> {profile.role}
+              </p>
+
+              <div className="d-flex gap-2 mt-3">
+                <button
+                  className="btn btn-warning w-50"
+                  onClick={() => setEditing(true)}
+                >
+                  Edit Profile
+                </button>
+                <button className="btn btn-danger w-50" onClick={handleLogout}>
+                  Logout
+                </button>
+              </div>
+            </div>
+
+            {/* Edit Profile Form */}
+            {editing && (
+              <div className="card shadow-sm p-3 mb-4">
+                <h5 className="text-success mb-3">Edit Profile</h5>
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Name"
+                      value={editForm.name}
+                      readOnly
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <input
+                      type="email"
+                      className="form-control"
+                      placeholder="Email"
+                      value={editForm.email}
+                      readOnly
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Contact"
+                      value={editForm.contact}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, contact: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Address"
+                      value={editForm.address}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, address: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Availability Start</label>
+                    <input
+                      type="time"
+                      className="form-control"
+                      value={editForm.availability?.start || ""}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          availability: {
+                            ...editForm.availability,
+                            start: e.target.value,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Availability End</label>
+                    <input
+                      type="time"
+                      className="form-control"
+                      value={editForm.availability?.end || ""}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          availability: {
+                            ...editForm.availability,
+                            end: e.target.value,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Scrap Types (comma separated)"
+                      value={
+                        Array.isArray(editForm.scrapTypes)
+                          ? editForm.scrapTypes.join(", ")
+                          : ""
+                      }
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          scrapTypes: e.target.value
+                            .split(",")
+                            .map((s) => s.trim()),
+                        })
+                      }
+                    />
+                  </div>
                 </div>
+                <div className="mt-3 d-flex gap-2">
+                  <button className="btn btn-success" onClick={handleSaveProfile}>
+                    Save
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setEditing(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="card shadow-sm p-3 mb-4">
+              <h5 className="text-success mb-3">Quick Actions</h5>
+              <div className="d-flex gap-3 flex-wrap">
+                <button
+                  className="btn btn-primary"
+                  onClick={() => navigate("/collector-requests")}
+                >
+                  View Requests
+                </button>
+              </div>
+            </div>
+
+            <h4>📦 My Bookings</h4>
+            <div className="card shadow-sm p-3 mt-3">
+              {myBookings.length > 0 ? (
+                <ul>
+                  {myBookings.map((booking, index) => (
+                    <li
+                      key={index}
+                      className="d-flex justify-content-between align-items-center"
+                    >
+                      <span>
+                        {booking.scrapTypes
+                          ? booking.scrapTypes.join(", ")
+                          : booking.scrapType}{" "}
+                        - {booking.date}
+                        {booking.status === "completed" && (
+                          <span className="badge bg-success ms-2">Completed</span>
+                        )}
+                      </span>
+
+                      {booking.status === "accepted" && (
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => navigate(`/complete-pickup/${booking.id}`)}
+                        >
+                          Complete Pickup
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
               ) : (
-                <p>No recent activity</p>
+                <p>No bookings found.</p>
               )}
             </div>
-          </div>
-        </>
-      )}
-
-      {/* COLLECTOR DASHBOARD */}
-      {profile.role === "collector" && (
-        <>
-          <div className="card p-4 shadow-sm mb-4">
-            <p>
-              <strong>Email:</strong> {profile.email}
-            </p>
-            <p>
-              <strong>Contact:</strong> {profile.contact}
-            </p>
-            <p>
-              <strong>Locality:</strong> {profile.address}
-            </p>
-            <p>
-              <strong>Availability Time:</strong>{" "}
-              {profile.availability
-                ? `${profile.availability.start} - ${profile.availability.end}`
-                : "Not set"}
-            </p>
-            <p>
-              <strong>Scrap Types Collected:</strong>{" "}
-              {Array.isArray(profile.scrapTypes) &&
-              profile.scrapTypes.length > 0
-                ? profile.scrapTypes.join(", ")
-                : "Not specified"}
-            </p>
-            <p>
-              <strong>Role:</strong> {profile.role}
-            </p>
-
-            <div className="d-flex gap-2 mt-3">
-              <button
-                className="btn btn-warning w-50"
-                onClick={() => setEditing(true)}
-              >
-                Edit Profile
-              </button>
-              <button className="btn btn-danger w-50" onClick={handleLogout}>
-                Logout
-              </button>
-            </div>
-          </div>
-
-          {/* Edit Profile Form */}
-          {editing && (
-            <div className="card shadow-sm p-3 mb-4">
-              <h5 className="text-success mb-3">Edit Profile</h5>
-              <div className="row g-3">
-                <div className="col-md-6">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Name"
-                    value={editForm.name}
-                    readOnly
-                  />
-                </div>
-                <div className="col-md-6">
-                  <input
-                    type="email"
-                    className="form-control"
-                    placeholder="Email"
-                    value={editForm.email}
-                    readOnly
-                  />
-                </div>
-                <div className="col-md-6">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Contact"
-                    value={editForm.contact}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, contact: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="col-md-6">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Address"
-                    value={editForm.address}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, address: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Availability Start</label>
-                  <input
-                    type="time"
-                    className="form-control"
-                    value={editForm.availability?.start || ""}
-                    onChange={(e) =>
-                      setEditForm({
-                        ...editForm,
-                        availability: {
-                          ...editForm.availability,
-                          start: e.target.value,
-                        },
-                      })
-                    }
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Availability End</label>
-                  <input
-                    type="time"
-                    className="form-control"
-                    value={editForm.availability?.end || ""}
-                    onChange={(e) =>
-                      setEditForm({
-                        ...editForm,
-                        availability: {
-                          ...editForm.availability,
-                          end: e.target.value,
-                        },
-                      })
-                    }
-                  />
-                </div>
-                <div className="col-md-6">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Scrap Types (comma separated)"
-                    value={
-                      Array.isArray(editForm.scrapTypes)
-                        ? editForm.scrapTypes.join(", ")
-                        : ""
-                    }
-                    onChange={(e) =>
-                      setEditForm({
-                        ...editForm,
-                        scrapTypes: e.target.value
-                          .split(",")
-                          .map((s) => s.trim()),
-                      })
-                    }
-                  />
-                </div>
-              </div>
-              <div className="mt-3 d-flex gap-2">
-                <button className="btn btn-success" onClick={handleSaveProfile}>
-                  Save
-                </button>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setEditing(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Quick Actions for Collectors */}
-          <div className="card shadow-sm p-3 mb-4">
-            <h5 className="text-success mb-3">Quick Actions</h5>
-            <div className="d-flex gap-3 flex-wrap">
-              <button
-                className="btn btn-primary"
-                onClick={() => navigate("/collector-requests")}
-              >
-                View Requests
-              </button>
-            </div>
-          </div>
-
-          <h4>📦 My Bookings</h4>
-          <div className="card shadow-sm p-3 mt-3">
-            {myBookings.length > 0 ? (
-              <ul>
-                {myBookings.map((booking, index) => (
-                  <li
-                    key={index}
-                    className="d-flex justify-content-between align-items-center"
-                  >
-                    <span>
-                      {booking.scrapTypes
-                        ? booking.scrapTypes.join(", ")
-                        : booking.scrapType}{" "}
-                      - {booking.date}
-                      {booking.status === "completed" && (
-                        <span className="badge bg-success ms-2">
-                          Completed
-                        </span>
-                      )}
-                    </span>
-
-                    {booking.status === "accepted" && (
-                      <button
-                        className="btn btn-primary btn-sm"
-                        onClick={() =>
-                          navigate(`/complete-pickup/${booking.id}`)
-                        }
-                      >
-                        Complete Pickup
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No bookings found.</p>
-            )}
-          </div>
-        </>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

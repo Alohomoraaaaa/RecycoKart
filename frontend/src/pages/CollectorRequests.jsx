@@ -25,7 +25,6 @@ function CollectorRequests() {
         navigate("/login"); // no user logged in
       }
     });
-
     return () => unsubscribe();
   }, [navigate]);
 
@@ -82,43 +81,52 @@ function CollectorRequests() {
     }
   };
 
-  if (loading) return <p className="text-center mt-5">Loading requests...</p>;
+  if (loading)
+    return (
+      <div className="page-bg">
+        <div className="glass-card">
+          <p className="text-center mt-5">Loading requests...</p>
+        </div>
+      </div>
+    );
 
   return (
-    <div className="container my-5">
-      <h2 className="text-center text-success mb-4">Pickup Requests</h2>
-      {requests.length === 0 ? (
-        <p className="text-center">No pending requests at the moment.</p>
-      ) : (
-        <div className="list-group">
-          {requests.map((req) => (
-            <div key={req.id} className="list-group-item mb-3 shadow-sm p-3 rounded">
-              <h5 className="mb-2 text-primary">
-                {req.scrapTypes ? req.scrapTypes.join(", ") : req.scrapType} Pickup
-              </h5>
-              <p><strong>Date:</strong> {req.date}</p>
-              <p><strong>Time:</strong> {req.time}</p>
-              <p><strong>User:</strong> {req.userName || "N/A"}</p>
-              <p><strong>Phone:</strong> {req.userPhone || "N/A"}</p>
-              <p><strong>Pickup Address:</strong> {req.pickupAddress}</p>
-              <div className="mt-3">
-                <button
-                  className="btn btn-success me-2"
-                  onClick={() => handleAccept(req.id)}
-                >
-                  Accept
-                </button>
-                <button
-                  className="btn btn-danger"
-                  onClick={() => handleReject(req.id)}
-                >
-                  Reject
-                </button>
+    <div className="page-bg">
+      <div className="glass-card" style={{ width: "100%", maxWidth: 600, padding: "32px" }}>
+        <h2 className="text-center text-success mb-4">Pickup Requests</h2>
+        {requests.length === 0 ? (
+          <p className="text-center">No pending requests at the moment.</p>
+        ) : (
+          <div className="list-group">
+            {requests.map((req) => (
+              <div key={req.id} className="list-group-item mb-3 shadow-sm p-3 rounded">
+                <h5 className="mb-2 text-primary">
+                  {req.scrapTypes ? req.scrapTypes.join(", ") : req.scrapType} Pickup
+                </h5>
+                <p><strong>Date:</strong> {req.date}</p>
+                <p><strong>Time:</strong> {req.time}</p>
+                <p><strong>User:</strong> {req.userName || "N/A"}</p>
+                <p><strong>Phone:</strong> {req.userPhone || "N/A"}</p>
+                <p><strong>Pickup Address:</strong> {req.pickupAddress}</p>
+                <div className="mt-3">
+                  <button
+                    className="btn btn-success me-2"
+                    onClick={() => handleAccept(req.id)}
+                  >
+                    Accept
+                  </button>
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => handleReject(req.id)}
+                  >
+                    Reject
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

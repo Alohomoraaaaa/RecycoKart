@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
-import { db } from "../firebase"; // Import the db object
+import { db } from "../firebase";
 
 function LeaderBoard() {
   const [leaders, setLeaders] = useState([]);
@@ -10,40 +10,40 @@ function LeaderBoard() {
     const fetchLeaders = async () => {
       try {
         const usersRef = collection(db, "users");
-        // Create a query to order the users by recyclables in descending order
         const q = query(usersRef, orderBy("recyclables", "desc"));
-        
         const querySnapshot = await getDocs(q);
-        
+
         const leadersList = [];
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          // Extract name and recyclables, as seen in your document
           leadersList.push({
             user: data.name,
             weight: data.recyclables,
           });
         });
-        
+
         setLeaders(leadersList);
         setLoading(false);
-
       } catch (err) {
         console.error("Error fetching leaderboard:", err);
         setLoading(false);
       }
     };
-    
+
     fetchLeaders();
   }, []);
 
   if (loading) {
-    return <p>Loading leaderboard...</p>;
+    return (
+      <div className="page-bg">
+        <div className="glass-card p-5 text-center">Loading leaderboard...</div>
+      </div>
+    );
   }
 
   return (
-    <div className="container my-5">
-      <div className="card shadow-sm p-4">
+    <div className="page-bg">
+      <div className="glass-card p-4" style={{ maxWidth: 720, margin: "0 auto" }}>
         <h2 className="text-success text-center mb-4">🏆 Scrap Sellers LeaderBoard</h2>
 
         {leaders.length > 0 ? (

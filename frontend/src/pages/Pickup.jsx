@@ -4,11 +4,11 @@ import { auth, db } from "../firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 function Pickup() {
-  const [scrapTypes, setScrapTypes] = useState([]); // ✅ store multiple selections
+  const [scrapTypes, setScrapTypes] = useState([]);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [error, setError] = useState("");
-  const [address, setAddress] = useState(""); 
+  const [address, setAddress] = useState("");
   const [pickupAddress, setPickupAddress] = useState("");
 
   const navigate = useNavigate();
@@ -25,13 +25,10 @@ function Pickup() {
     fetchUserAddress();
   }, []);
 
-  // ✅ Handle checkbox change
   const handleCheckboxChange = (type) => {
     if (scrapTypes.includes(type)) {
-      // remove if already selected
       setScrapTypes(scrapTypes.filter((item) => item !== type));
     } else {
-      // add if newly selected
       setScrapTypes([...scrapTypes, type]);
     }
   };
@@ -78,9 +75,7 @@ function Pickup() {
       }
 
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          address
-        )}`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
       );
       const data = await response.json();
       if (!data.length) {
@@ -89,10 +84,9 @@ function Pickup() {
       }
       const { lat, lon } = data[0];
 
-      // ✅ Pass array of scrap types
       navigate("/pickupresult", {
         state: {
-          scrapTypes, // array
+          scrapTypes,
           date,
           time,
           userLat: parseFloat(lat),
@@ -108,15 +102,14 @@ function Pickup() {
   };
 
   return (
-    <div className="container my-5">
-      <h2 className="text-center text-success mb-4">Schedule A Scrap Pickup</h2>
-      <div className="row justify-content-center">
-        <div className="col-md-6">
-          <div className="card shadow-sm p-4">
+    <div className="page-bg">
+      <div className="glass-card" style={{ maxWidth: 520, width: "100%", padding: "32px", margin: "32px auto" }}>
+        <h2 className="text-center text-success mb-4">Schedule A Scrap Pickup</h2>
+        <div className="row justify-content-center">
+          <div className="col-md-12">
             {error && <div className="alert alert-danger">{error}</div>}
             <form onSubmit={handleSubmit}>
-              
-              {/* ✅ Recyclable Type (multiple checkboxes) */}
+              {/* Recyclable Type (checkboxes) */}
               <div className="mb-3">
                 <label className="form-label">Recyclable Type</label>
                 <div>
@@ -168,7 +161,7 @@ function Pickup() {
                   placeholder="Enter your full pickup address"
                   value={pickupAddress}
                   onChange={(e) => setPickupAddress(e.target.value)}
-                ></textarea>
+                />
               </div>
 
               {/* Locality */}

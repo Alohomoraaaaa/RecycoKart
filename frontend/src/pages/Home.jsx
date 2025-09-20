@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { auth, db } from "../firebase"; // ✅ make sure db is exported from firebase.js
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import "../styles/PickupSummary.css";
+import "../styles/Home.css";
 
 function Home() {
   // 🔹 NEW: states for auth + role

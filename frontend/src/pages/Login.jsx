@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
-import "../styles/Login.css"; // ✅ import the new CSS
 
 function Login() {
   const [error, setError] = useState("");
@@ -17,7 +16,7 @@ function Login() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Check if user already exists in Firestore
+      // Check if user exists in Firestore
       const userDoc = await getDoc(doc(db, "users", user.uid));
 
       if (!userDoc.exists()) {
@@ -43,9 +42,9 @@ function Login() {
   };
 
   return (
-    <div className="login-page">
+    <div className="page-bg">
       <div
-        className="goo-card login-card p-5"
+        className="glass-card p-5"
         style={{
           width: "420px",
           minHeight: "520px",
@@ -59,7 +58,10 @@ function Login() {
           paddingBottom: "40px",
         }}
       >
-        <h2 className="text-center text-success mb-4" style={{ fontSize: "2.25rem", fontWeight: "700" }}>
+        <h2
+          className="text-center text-success mb-4"
+          style={{ fontSize: "2.25rem", fontWeight: "700" }}
+        >
           Login
         </h2>
 
@@ -67,7 +69,7 @@ function Login() {
           Login using your Google account to continue
         </div>
 
-        {/* Updated Button with Google Logo */}
+        {/* Google Sign In Button */}
         <button
           onClick={handleGoogleLogin}
           className="btn btn-outline-success w-100 mb-3"

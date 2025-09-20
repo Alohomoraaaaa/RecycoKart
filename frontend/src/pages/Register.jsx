@@ -3,15 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
-import "../styles/Register.css";
 
 function Register() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    name: "",
-    contact: "",
-    role: "",
-  });
+  const [formData, setFormData] = useState({ name: "", contact: "", role: "" });
   const [message, setMessage] = useState("");
 
   const handleChange = (e) => {
@@ -33,12 +28,10 @@ function Register() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // check if user already exists
       const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
 
       if (!userSnap.exists()) {
-        // new user — save details
         await setDoc(userRef, {
           name: formData.name,
           email: user.email,
@@ -56,7 +49,6 @@ function Register() {
           navigate("/");
         }
       } else {
-        // existing user — just redirect based on role
         const data = userSnap.data();
         if (data.role === "collector") {
           navigate("/collector-setup");
@@ -74,29 +66,12 @@ function Register() {
   };
 
   return (
-    <div className="register-page d-flex justify-content-center align-items-center min-vh-100">
-      <div
-        className="card shadow-sm p-5 register-card"
-        style={{
-          width: "420px",
-          borderRadius: "20px",
-          boxShadow: "0 12px 35px rgba(34, 139, 34, 0.15)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "24px",
-          paddingTop: "40px",
-          paddingBottom: "40px",
-          cursor: "pointer",
-        }}
-      >
-        <h2
-          className="text-center text-success mb-4"
-          style={{ fontSize: "2.25rem", fontWeight: "700" }}
-        >
+    <div className="page-bg">
+      <div className="glass-card">
+        <h2 className="text-center text-success mb-4" style={{ fontSize: "2.25rem", fontWeight: "700" }}>
           Register
         </h2>
         <form onSubmit={handleGoogleSignIn}>
-          {/* Full Name */}
           <div className="mb-3">
             <label className="form-label">Full Name</label>
             <input
@@ -110,7 +85,6 @@ function Register() {
             />
           </div>
 
-          {/* Contact */}
           <div className="mb-3">
             <label className="form-label">Contact Number</label>
             <input
@@ -124,7 +98,6 @@ function Register() {
             />
           </div>
 
-          {/* Role */}
           <div className="mb-4">
             <label className="form-label">I Am Registering As</label>
             <select
@@ -140,7 +113,6 @@ function Register() {
             </select>
           </div>
 
-          {/* Google Sign Up Button with Logo */}
           <button
             type="submit"
             className="btn btn-outline-success w-100"
