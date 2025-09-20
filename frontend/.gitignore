@@ -24,3 +24,21 @@ dist-ssr
 *.sw?
 
 /backend/PrivateKey.json
+# Node
+node_modules/
+package-lock.json
+
+# Build
+dist/
+build/
+
+# Python
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import "../styles/Register.css";
 
 function Register() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ function Register() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setMessage("");
   };
 
   const handleGoogleSignIn = async (e) => {
@@ -66,78 +68,120 @@ function Register() {
       setMessage("✅ Registration successful!");
       setFormData({ name: "", contact: "", role: "" });
     } catch (error) {
+      console.error(error);
       setMessage("❌ " + error.message);
     }
   };
 
   return (
-    <div className="container my-5">
-      <h2 className="text-center text-success mb-4">Register</h2>
-      <div className="row justify-content-center">
-        <div className="col-md-6">
-          <div className="card shadow-sm p-4">
-            <form onSubmit={handleGoogleSignIn}>
-              {/* Full Name */}
-              <div className="mb-3">
-                <label className="form-label">Full Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  className="form-control"
-                  placeholder="Enter Your Name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              {/* Contact */}
-              <div className="mb-3">
-                <label className="form-label">Contact Number</label>
-                <input
-                  type="tel"
-                  name="contact"
-                  className="form-control"
-                  placeholder="Enter Your Contact Number"
-                  value={formData.contact}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              {/* Role */}
-              <div className="mb-3">
-                <label className="form-label">I Am Registering As</label>
-                <select
-                  name="role"
-                  className="form-select"
-                  value={formData.role}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">-- Select --</option>
-                  <option value="collector">Collector</option>
-                  <option value="user">User</option>
-                </select>
-              </div>
-
-              {/* Submit Button */}
-              <button type="submit" className="btn btn-success w-100">
-                Sign Up with Google
-              </button>
-            </form>
-
-            {message && (
-              <p
-                className={`text-center mt-3 ${
-                  message.startsWith("✅") ? "text-success" : "text-danger"
-                }`}
-              >
-                {message}
-              </p>
-            )}
+    <div className="register-page d-flex justify-content-center align-items-center min-vh-100">
+      <div
+        className="card shadow-sm p-5 register-card"
+        style={{
+          width: "420px",
+          borderRadius: "20px",
+          boxShadow: "0 12px 35px rgba(34, 139, 34, 0.15)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "24px",
+          paddingTop: "40px",
+          paddingBottom: "40px",
+          cursor: "pointer",
+        }}
+      >
+        <h2
+          className="text-center text-success mb-4"
+          style={{ fontSize: "2.25rem", fontWeight: "700" }}
+        >
+          Register
+        </h2>
+        <form onSubmit={handleGoogleSignIn}>
+          {/* Full Name */}
+          <div className="mb-3">
+            <label className="form-label">Full Name</label>
+            <input
+              type="text"
+              name="name"
+              className="form-control"
+              placeholder="Enter Your Name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
           </div>
-        </div>
+
+          {/* Contact */}
+          <div className="mb-3">
+            <label className="form-label">Contact Number</label>
+            <input
+              type="tel"
+              name="contact"
+              className="form-control"
+              placeholder="Enter Your Contact Number"
+              value={formData.contact}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          {/* Role */}
+          <div className="mb-4">
+            <label className="form-label">I Am Registering As</label>
+            <select
+              name="role"
+              className="form-select"
+              value={formData.role}
+              onChange={handleChange}
+              required
+            >
+              <option value="">-- Select --</option>
+              <option value="collector">Collector</option>
+              <option value="user">User</option>
+            </select>
+          </div>
+
+          {/* Google Sign Up Button with Logo */}
+          <button
+            type="submit"
+            className="btn btn-outline-success w-100"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "1.1rem",
+              padding: "14px 0",
+              fontWeight: "600",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+            }}
+          >
+            <img
+              src="https://developers.google.com/identity/images/g-logo.png"
+              alt="Google logo"
+              style={{
+                width: 22,
+                height: 22,
+                marginRight: 12,
+                background: "white",
+                borderRadius: 2,
+                objectFit: "cover",
+                boxShadow: "0 1px 2px rgba(60,64,67,.1)",
+              }}
+            />
+            Sign Up with Google
+          </button>
+        </form>
+
+        {message && (
+          <p
+            className={`text-center mt-3 ${
+              message.startsWith("✅") ? "text-success" : "text-danger"
+            }`}
+            style={{ fontSize: "1rem", fontWeight: "600" }}
+          >
+            {message}
+          </p>
+        )}
       </div>
     </div>
   );
