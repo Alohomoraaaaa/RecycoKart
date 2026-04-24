@@ -28,11 +28,6 @@ Our mission is to make recycling **transparent, rewarding, and sustainable** �
 
 ---
 
-
-*(Replace with real screenshots later)*  
-
----
-
 ## 🚀 Getting Started  
 
 ### 1️⃣ Clone the repo  
